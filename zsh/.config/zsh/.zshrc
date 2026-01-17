@@ -15,7 +15,7 @@ else
 fi
 
 # Zsh history location and settings
-HISTFILE="$HOME/.zsh_history"
+HISTFILE="$HOME/.config/zsh/.zsh_history"
 HISTSIZE=10000
 SAVEHIST=10000
 
