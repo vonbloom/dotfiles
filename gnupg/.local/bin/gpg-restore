@@ -1,0 +1,16 @@
+#!/bin/sh
+
+secret_file=secret.asc
+trust_file=trust.txt
+tmp_path=/tmp/gpg_backup
+output=gnupg_backup.tar.gz
+
+echo "Extracting backup..."
+tar -xPzvf "$output"
+
+echo "Importing secret keys and owner trust..."
+gpg --import "$tmp_path/$secret_file"
+gpg --import-ownertrust < "$tmp_path/$trust_file"
+
+echo "Cleaning temp files..."
+rm -rf "$tmp_path"

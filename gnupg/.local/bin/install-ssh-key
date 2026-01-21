@@ -1,0 +1,17 @@
+#!/bin/sh
+if [ "$#" -eq 0 ] || { [ "$#" -eq 1 ] && [ "$1" = "-u" ]; }; then
+	echo "Please specify a user@host where to install the ssh key"
+	exit 1
+fi
+
+ssh_key=$(gpg --export-ssh-key vonbloom@gmail.com)
+remote_path='~/.ssh/authorized_keys'
+
+if [ "$1" = "-u" ]; then
+	echo "Uninstalling ssh key from $2"
+	ssh "$2" "sed -i '/^$ssh_key$/d' $remote_path"
+	exit 0
+fi
+
+echo "Installing ssh key to $1"
+ssh "$1" "grep -q $(echo \"$ssh_key\") $remote_path || echo $ssh_key >> $remote_path"

@@ -1,10 +1,20 @@
-# Export backup of private keys and owner trust
+# This package will install utils to backup/restore and install ssh keys
+## Export backup of private keys and owner trust
 ```bash
-gpg --export-secret-keys --armor > backup.asc
-gpg --export-ownertrust > trust.txt
+gpg-backup
 ```
-# Import private keys and owner trust
+
+## Import private keys and owner trust
 ```bash
-gpg --import backup.asc
-gpg --import-ownertrust < trust.txt
+gpg-restore
+```
+
+## Install ssh key to server
+```bash
+install-ssh-key user@host
+```
+
+## Uninstall ssh key from server
+```bash
+install-ssh-key -u user@host
 ```
