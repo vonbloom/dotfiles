@@ -1,0 +1,13 @@
+#!/bin/zsh
+for plugin in "${zsh_plugins[@]}"; do
+		local name="${plugin##*/}"
+		local plugin_path="$base_dir/$name"
+
+		if [[ ! -d $plugin_path ]]; then
+				print "Cannot update $name"
+				continue
+		fi
+		print "Updating $name..."
+		git -C $plugin_path fetch --all
+		git -C $plugin_path reset --hard origin/master
+done

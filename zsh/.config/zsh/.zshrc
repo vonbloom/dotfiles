@@ -10,8 +10,12 @@
 #
 # ----------------------------------------------
 
-fpath=( "$XDH_CONFIG_HOME/zsh/functions" $fpath )
-autoload -Uz install_plugins update_plugins
+# Load user functions
+fpath=( "$XDG_DATA_HOME/zsh/functions" $fpath )
+autoload -Uz install-zsh-plugins update-zsh-plugins
+
+# Load completions
+autoload -Uz compinit && compinit -i
 
 # Load utils
 source "$XDG_CONFIG_HOME/zsh/utils.zsh"
@@ -36,4 +40,4 @@ if _have tmux && ! _tty1 && ! _ssh_login && [[ -z $TMUX ]] && [[ -z $RAW_TERM ]]
     tmux new-session -A -s main
 fi
 
-[[ $(pgrep -cx "$TERMINAL") -eq 1 ]] && _have fastfetch && fastfetch
+[[ $(pgrep -cx "$TERMINAL") -eq 2 ]] && _have fastfetch && fastfetch
