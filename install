@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+DOTFILES_DIR=$(pwd)
+TARGET_DIR="$HOME"
+
+echo "Installing dotfiles"
+
+for dir in ./*/; do
+    package=$(basename "$dir")
+
+    # Ignorem carpetes que no volem processar (com .git)
+    if [[ "$package" == .* ]]; then
+        continue
+    fi
+
+    echo "Stowing $package package"
+
+    stow --restow -t "$TARGET_DIR" \
+        --ignore='^\.' \
+        --ignore='README\.md' \
+        --ignore='install\.sh' \
+				--verbose \
+        "$package"
+
+		hook="$DOTFILES_DIR/$package/install"
+    if [[ -x "$hook" ]]; then
+        echo "Running installation hook for $package..."
+        if ! "$hook"; then
+            echo "Something went wrong in $package install hook"
+        fi
+    fi
+done
+echo "Installation finished"
