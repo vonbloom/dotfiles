@@ -15,16 +15,16 @@ fpath=( "$ZDOTDIR/zsh/functions" $fpath )
 autoload -Uz install-zsh-plugins source-zsh-plugins update-zsh-plugins
 
 # Load utils
-source "$ZDOTDIR/zsh/utils.zsh"
+source "$ZDOTDIR/utils.zsh"
 
 # Load history
-source "$ZDOTDIR/zsh/history.zsh"
+source "$ZDOTDIR/history.zsh"
 
 # Load prompt
-source "$ZDOTDIR/zsh/prompt.zsh"
+source "$ZDOTDIR/prompt.zsh"
 
 # Load aliases
-# source "$ZDOTDIR/zsh/alias.zsh"
+emulate bash -c "source $DOTDIR/alias.bash"
 
 # Load completions
 autoload -Uz compinit && compinit -i
