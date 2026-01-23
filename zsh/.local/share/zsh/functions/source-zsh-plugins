@@ -1,0 +1,6 @@
+#!/bin/zsh
+for plugin in "${zsh_plugins[@]}"; do
+    local name="${plugin##*/}"
+    local target="${base_dir}/${name}/${name}.plugin.zsh"
+    [[ -f $target ]] && source $target
+done

@@ -1,36 +1,36 @@
 # ----------------------------------------------
 #
-# ########  ######  ##     ## ########   ###### 
+# ########  ######  ##     ## ########   ######
 #      ##  ##    ## ##     ## ##     ## ##    ##
-#     ##   ##       ##     ## ##     ## ##      
-#    ##     ######  ######### ########  ##      
-#   ##           ## ##     ## ##   ##   ##      
+#     ##   ##       ##     ## ##     ## ##
+#    ##     ######  ######### ########  ##
+#   ##           ## ##     ## ##   ##   ##
 #  ##      ##    ## ##     ## ##    ##  ##    ##
-# ########  ######  ##     ## ##     ##  ###### 
+# ########  ######  ##     ## ##     ##  #####€
 #
 # ----------------------------------------------
 
 # Load user functions
-fpath=( "$XDG_DATA_HOME/zsh/functions" $fpath )
-autoload -Uz install-zsh-plugins update-zsh-plugins
+fpath=( "$ZDOTDIR/zsh/functions" $fpath )
+autoload -Uz install-zsh-plugins source-zsh-plugins update-zsh-plugins
+
+# Load utils
+source "$ZDOTDIR/zsh/utils.zsh"
+
+# Load history
+source "$ZDOTDIR/zsh/history.zsh"
+
+# Load prompt
+source "$ZDOTDIR/zsh/prompt.zsh"
+
+# Load aliases
+# source "$ZDOTDIR/zsh/alias.zsh"
 
 # Load completions
 autoload -Uz compinit && compinit -i
 
-# Load utils
-source "$XDG_CONFIG_HOME/zsh/utils.zsh"
-
 # Load plugins
-source "${XDG_CONFIG_HOME}/zsh/plugins.zsh"
-
-# Load custom prompt
-source "${XDG_CONFIG_HOME}/zsh/prompt.zsh"
-
-# Load custom cursor styling
-source "$XDG_CONFIG_HOME/zsh/vimode.zsh"
-
-# Load history
-source "$XDG_CONFIG_HOME/zsh/history.zsh"
+source "$ZDOTDIR/zsh/plugins.zsh"
 
 # Shell integrations
 _have fzf && source <(fzf --zsh)
@@ -40,4 +40,4 @@ if _have tmux && ! _tty1 && ! _ssh_login && [[ -z $TMUX ]] && [[ -z $RAW_TERM ]]
     tmux new-session -A -s main
 fi
 
-[[ $(pgrep -cx "$TERMINAL") -eq 2 ]] && _have fastfetch && fastfetch
+# [[ $(pgrep -cx "$TERMINAL") -eq 2 ]] && _have fastfetch && fastfetch

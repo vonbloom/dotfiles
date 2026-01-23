@@ -12,10 +12,6 @@ install-zsh-plugins
 
 zcompile $base_dir/**/*.zsh 2>/dev/null
 
-for plugin in "${zsh_plugins[@]}"; do
-    name="${plugin##*/}"
-    local target="${base_dir}/${name}/${name}.plugin.zsh"
-    [[ -f $target ]] && source $target
-done
+source-zsh-plugins
 
-unset plugin
+unset plugin base_dir

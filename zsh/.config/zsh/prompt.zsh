@@ -1,67 +1,94 @@
 #!/bin/zsh
 
-typeset -g EXIT_STATUS=0
-typeset -g PROMPT_CMD_TEXT
-NL=$'\n'
+# Encapsulate in an IIFE to keep the namespace clean
+() {
+    # 1. Load Modules
+    autoload -Uz add-zsh-hook vcs_info
 
-function get_status() {
-    if [[ $EXIT_STATUS -eq 0 ]]; then
-        if [[ $UID -eq 0 ]]; then
-            echo '%F{orange}❯%f'
-        else
-            echo '%F{green}❯%f'
+    # 2. Keybindings & Vi Mode Configuration
+    bindkey -v
+    export KEYTIMEOUT=1
+    bindkey '^?' backward-delete-char
+    bindkey '^[[3~' delete-char
+
+    autoload -Uz edit-command-line
+    zle -N edit-command-line
+    bindkey -M vicmd 'v' edit-command-line
+
+    # 3. Version Control System Setup
+    zstyle ':vcs_info:*' enable git
+    zstyle ':vcs_info:git:*' formats '%F{yellow}(%b)%f'
+    zstyle ':vcs_info:git:*' actionformats '%F{yellow}(%b|%a)%f'
+
+    # 4. Global State
+    typeset -g CMD_START_TIME=""
+
+    # 5. Optimized Helper Functions
+		_get_distrobox_info() {
+        # Distrobox typically exports $CONTAINER_ID inside the container
+        if [[ -n $CONTAINER_ID || -f /run/.containerenv ]]; then
+            # Use CONTAINER_ID if available, otherwise fallback to "container"
+            local name="${CONTAINER_ID:-container}"
+            # local icon="" # Default container icon (Nerd Font)
+
+            echo "%F{cyan}${name}%f "
         fi
-    else
-        echo '%F{red}❯%f'
-    fi
+    }
+
+    # 6. Hook Functions
+    _prompt_precmd() {
+        local last_status=$?
+        vcs_info
+
+        # Dynamic User/Root Check
+        local path_color="blue"
+        local sym_col="green"
+        [[ $last_status -ne 0 ]] && sym_col="red"
+
+        # Dynamic SSH Check
+        local ssh_info=""
+        [[ -n $SSH_CONNECTION ]] && ssh_info="%F{purple}%n@%M%f "
+
+        # Get Distrobox Info
+        local distro_info=$(_get_distrobox_info)
+
+        # Assemble PROMPT
+        PROMPT=$'\n'"${distro_info}${ssh_info}%F{${path_color}}%~%f ${vcs_info_msg_0_}"$'\n'"%F{${sym_col}}❯%f "
+
+        # Assemble RPROMPT (Timer)
+        RPROMPT=""
+        if [[ -n $CMD_START_TIME ]]; then
+            local duration=$(( SECONDS - CMD_START_TIME ))
+            [[ $duration -ge 3 ]] && RPROMPT="%F{yellow}${duration}s%f"
+        fi
+
+        CMD_START_TIME=""
+    }
+
+    _prompt_preexec() {
+        CMD_START_TIME=$SECONDS
+
+        if [[ "$TERM" != "dumb" ]]; then
+            local trans_sym="%F{green}❯%f"
+            [[ $UID -eq 0 ]] && trans_sym="%F{orange}❯%f"
+            print -Pn "\e[1A\e[K${trans_sym} ${1}\n"
+        fi
+    }
+
+    # 7. Cursor Shape Management
+    _update_cursor() {
+        case $KEYMAP in
+            vicmd)      print -n "\e[1 q" ;;
+            viins|main) print -n "\e[5 q" ;;
+        esac
+    }
+
+    # 8. Registration
+    zle -N zle-keymap-select _update_cursor
+    zle -N zle-line-init _update_cursor
+
+    add-zsh-hook preexec _prompt_preexec
+    add-zsh-hook precmd _prompt_precmd
+
+    print -n "\e[5 q" # Start with beam cursor
 }
-
-function capture_exit_status() {
-    EXIT_STATUS=$?
-}
-
-function capture_command_text() {
-    PROMPT_CMD_TEXT=$1
-}
-
-function transient_preexec() {
-    if [[ "$TERM" != "dumb" ]]; then
-        local status_color=$(get_status)
-        local last_prompt="${status_color} ${PROMPT_CMD_TEXT}"
-        
-        echo -ne "\033[1A\033[K"
-        echo -ne "\033[1A\033[K"
-        print -P "${last_prompt}"
-    fi
-}
-
-function custom_prompt() {
-    local login=""
-    local cwd=""
-    local exit_status="$(get_status)"
-
-    if [[ $SSH_CONNECTION ]]; then
-        login='%F{purple}%n@%M%f '
-    fi
-
-    if [[ $UID -eq 0 ]]; then
-        cwd='%F{red}%~%f' 
-    else
-        cwd='%F{blue}%~%f' 
-    fi
-
-    PROMPT=$NL"$login$cwd "$vcs_info_msg_0_$NL"$exit_status "
-}
-
-autoload -Uz capture_exit_status custom_prompt transient_preexec capture_command_text
-autoload -Uz add-zsh-hook
-autoload -Uz vcs_info
-
-precmd_functions=( capture_exit_status $precmd_functions )
-precmd_functions+=( vcs_info )
-precmd_functions+=( custom_prompt )
-
-add-zsh-hook preexec capture_command_text
-add-zsh-hook preexec transient_preexec
-
-zstyle ':vcs_info:git:*' formats '%F{yellow}%b%f'
