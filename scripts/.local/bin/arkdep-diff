@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+# --- Configuration & Colors ---
+LAST_DEPLOY_DIR="/arkdep/deployments"
+# Picks the SECOND TO LAST deployment directory
+PENULTIMATE_DEPLOY=$(ls -d ${LAST_DEPLOY_DIR}/archlinux-* 2>/dev/null | sort | tail -n 2 | head -n 1)
+OLD_DB="${PENULTIMATE_DEPLOY}/rootfs/var/lib/pacman"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# --- Error Handling ---
+if [ -z "$PENULTIMATE_DEPLOY" ] || [ ! -d "$OLD_DB" ]; then
+    echo -e "${RED}Error:${NC} Could not find a penultimate deployment at $LAST_DEPLOY_DIR"
+    exit 1
+fi
+
+echo -e "${BLUE}${BOLD}Arch Linux Deployment Report${NC}"
+echo -e "${BLUE}Comparing with:${NC} $(basename "$PENULTIMATE_DEPLOY")\n"
+
+# --- Data Preparation ---
+OLD_LIST=$(pacman -Q -b "$OLD_DB" 2>/dev/null | sort)
+NEW_LIST=$(pacman -Q | sort)
+
+# Function to safely count lines
+count_lines() {
+    if [ -z "$1" ]; then echo "0"; else echo "$1" | wc -l; fi
+}
+
+# --- 1. Version Changes ---
+CHANGES=$(join <(echo "$OLD_LIST") <(echo "$NEW_LIST") | \
+          awk '$2 != $3 {print $1 "," $2 "," $3}')
+COUNT_CHANGES=$(count_lines "$CHANGES")
+
+echo -e "${YELLOW}${BOLD}UPDATED ($COUNT_CHANGES)${NC}"
+if [ "$COUNT_CHANGES" -eq 0 ]; then
+    echo "No version changes detected."
+else
+    # We use commas as temporary separators so 'column' handles spaces in headers correctly
+    (echo "PACKAGE,OLD VERSION,NEW VERSION"; echo "$CHANGES") | column -s, -t
+fi
+
+# --- 2. New Packages ---
+NEW_NAMES_ONLY=$(comm -13 <(echo "$OLD_LIST" | cut -d' ' -f1) <(echo "$NEW_LIST" | cut -d' ' -f1))
+ADDED=$(join <(echo "$NEW_NAMES_ONLY") <(echo "$NEW_LIST"))
+COUNT_ADDED=$(count_lines "$ADDED")
+
+echo -e "\n${GREEN}${BOLD}INSTALLED ($COUNT_ADDED)${NC}"
+if [ "$COUNT_ADDED" -eq 0 ]; then
+    echo "No new packages installed."
+else
+    # Headers removed as requested
+    echo "$ADDED" | column -t
+fi
+
+# --- 3. Removed Packages ---
+REMOVED=$(comm -23 <(echo "$OLD_LIST" | cut -d' ' -f1) <(echo "$NEW_LIST" | cut -d' ' -f1))
+COUNT_REMOVED=$(count_lines "$REMOVED")
+
+echo -e "\n${RED}${BOLD}REMOVED ($COUNT_REMOVED)${NC}"
+if [ "$COUNT_REMOVED" -eq 0 ]; then
+    echo "No packages removed."
+else
+    # Headers removed as requested
+    echo "$REMOVED" | column -t
+fi
