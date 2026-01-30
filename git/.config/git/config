@@ -1,0 +1,10 @@
+[init]
+	defaultBranch = main
+[user]
+	email = vonbloom@gmail.com
+	name = Roger
+	signingkey = 7E0EB22A252016A3
+[gpg]
+	program = gpg
+[commit]
+	gpgsign = true
