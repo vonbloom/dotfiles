@@ -6,6 +6,15 @@ PKG=$1
 
 stow_target() {
 	local pkg=$1
+	# Handle special permissions
+	case "$pkg" in
+		"gnupg")
+			mkdir -p -m 700 "$HOME/.gnupg"
+			;;
+		"ssh")
+			mkdir -p -m 700 "$HOME/.ssh"
+			;;
+	esac
 	stow --restow -t "$TARGET_DIR" \
 			--ignore='^\.' \
 			--ignore='README\.md' \
