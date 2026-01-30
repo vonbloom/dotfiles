@@ -2,25 +2,34 @@
 
 DOTFILES_DIR=$(pwd)
 TARGET_DIR="$HOME"
+PKG=$1
+
+stow_target() {
+	local pkg=$1
+	stow --restow -t "$TARGET_DIR" \
+			--ignore='^\.' \
+			--ignore='README\.md' \
+			--ignore='install\.sh' \
+			--no-folding \
+			--verbose \
+			"$pkg"
+}
+
+if [[ -n $PKG ]]; then
+	echo "Installing $PKG dotfiles"
+	stow_target "$PKG"
+	exit 0
+fi
 
 echo "Installing dotfiles"
-
 for dir in ./*/; do
     package=$(basename "$dir")
 
-    # Ignorem carpetes que no volem processar (com .git)
-    if [[ "$package" == .* ]]; then
-        continue
-    fi
+    # Ignore dot folders
+    [[ "$package" == .* ]] && continue
 
     echo "Stowing $package package"
-
-    stow --restow -t "$TARGET_DIR" \
-        --ignore='^\.' \
-        --ignore='README\.md' \
-        --ignore='install\.sh' \
-				--verbose \
-        "$package"
+    stow_target "$package"
 
 		hook="$DOTFILES_DIR/$package/install"
     if [[ -x "$hook" ]]; then
