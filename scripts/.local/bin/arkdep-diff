@@ -3,7 +3,7 @@
 # --- Configuration & Colors ---
 LAST_DEPLOY_DIR="/arkdep/deployments"
 # Picks the SECOND TO LAST deployment directory
-PENULTIMATE_DEPLOY=$(ls -d ${LAST_DEPLOY_DIR}/archlinux-* 2>/dev/null | sort | tail -n 2 | head -n 1)
+PENULTIMATE_DEPLOY=$(ls -d ${LAST_DEPLOY_DIR}/* 2>/dev/null | sort | tail -n 2 | head -n 1)
 OLD_DB="${PENULTIMATE_DEPLOY}/rootfs/var/lib/pacman"
 
 RED='\033[0;31m'
