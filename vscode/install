@@ -1,0 +1,20 @@
+#!/bin/bash
+
+EXTENSIONS=(
+    "ms-vscode-remote.remote-containers"
+)
+
+echo "Checking VS Code extensions..."
+INSTALLED=$(code --list-extensions | tr '[:upper:]' '[:lower:]')
+
+for ext in "${EXTENSIONS[@]}"; do
+    ext_lower=$(echo "$ext" | tr '[:upper:]' '[:lower:]')
+    if echo "$INSTALLED" | grep -q "^${ext_lower}$"; then
+        echo "Already installed: $ext"
+    else
+        echo "Installing: $ext..."
+        code --install-extension "$ext"
+    fi
+done
+
+echo "Extensions are up to date!"

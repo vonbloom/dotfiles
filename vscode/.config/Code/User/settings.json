@@ -1,8 +1,5 @@
 {
 	"dev.containers.dockerPath": "podman",
 	"docker.dockerPath": "podman",
-	"terminal.integrated.fontFamily": "'JetBrainsMono NF', monospace",
-	"teminal.integrated.letterSpacing": 0.5,
-	"terminal.fontLigatures": true,
 	"workbench.secondarySideBar.defaultVisibility": "hidden"
 }
