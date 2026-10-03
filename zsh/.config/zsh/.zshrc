@@ -26,8 +26,11 @@ source "$ZDOTDIR/prompt.zsh"
 # Load aliases
 emulate bash -c "source $ZDOTDIR/alias.bash"
 
-# Load completions
-autoload -Uz compinit && compinit -i
+# Load completions (separate dump per environment: host and distroboxes have different fpaths)
+_zcompdump="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump-${CONTAINER_ID:-host}"
+[[ -d ${_zcompdump:h} ]] || mkdir -p ${_zcompdump:h}
+autoload -Uz compinit && compinit -i -d "$_zcompdump"
+unset _zcompdump
 
 # Load plugins
 source "$ZDOTDIR/plugins.zsh"
