@@ -24,13 +24,13 @@ stow_target() {
 			--verbose \
 			"$pkg"
 
-		hook="$DOTFILES_DIR/$package/install"
-    if [[ -x "$hook" ]]; then
-        echo "Running installation hook for $package..."
-        if ! "$hook"; then
-            echo "Something went wrong in $package install hook"
-        fi
-    fi
+	hook="$DOTFILES_DIR/$pkg/install"
+	if [[ -x "$hook" ]]; then
+		echo "Running installation hook for $pkg..."
+		if ! "$hook"; then
+			echo "Something went wrong in $pkg install hook"
+		fi
+	fi
 }
 
 if [[ -n $PKG ]]; then
