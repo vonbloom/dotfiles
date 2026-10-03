@@ -39,9 +39,15 @@ distrobox).
 - `distrobox-host-exec` does not work here (host-spawn needs flatpak, which the host lacks). Never
   run podman in local mode inside a container (e.g. `--remote=false` or the host binary from
   `/run/host`): it deletes the host's rootless `pause.pid`.
-- The container gets AUR packages (`brave-bin`, `visual-studio-code-bin`...) from a prebuilt pacman
-  repo `[aur]` at `http://192.168.2.38`, added by `pre_init_distrobox_assemble.sh`; plain
-  `pacman -Syu` updates them, no AUR helper.
+- `pre_init_distrobox_assemble.sh` (runs as root on every container start) adds two repos after
+  Arch's `[core]`/`[extra]`, in priority order: `[cachyos]` (generic x86_64 only, not the `-v3`
+  repos, so the base stays Arch) and `[aur]`, prebuilt AUR packages at `http://192.168.2.38`.
+  A package in both (e.g. `brave-bin`) comes from `[cachyos]`. Plain `pacman -Syu` updates
+  everything, no AUR helper. The Arch image has no local pacman master key, so the hook runs
+  `pacman-key --init` before lsigning the CachyOS key.
+- VS Code must stay Microsoft's build (`visual-studio-code-bin` from `[aur]`): CachyOS only has
+  Code-OSS (`code`) and `vscodium`, which cannot use the Dev Containers extension the `tramit-*`
+  projects rely on.
 
 ## zsh
 
