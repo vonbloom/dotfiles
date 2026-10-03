@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Run a command in a distrobox, or open a shell in it when no command is given.
+#
+#   userland|playground [command [args...]]
+#
+# playground is a symlink to this script; the box is taken from the name it is called by.
+
+set -euo pipefail
+
+box=$(basename "$0")
+
+# distrobox-host-exec does not work on this host (no flatpak), so other boxes are only
+# reachable from the host.
+if [ "${CONTAINER_ID:-}" = "$box" ]; then
+	[ $# -gt 0 ] || { echo "Already inside $box" >&2; exit 1; }
+	exec "$@"
+elif [ -n "${CONTAINER_ID:-}" ]; then
+	echo "Run this from the host or from inside $box" >&2
+	exit 1
+fi
+
+[ $# -gt 0 ] || exec distrobox enter "$box"
+exec distrobox enter "$box" -- "$@"
