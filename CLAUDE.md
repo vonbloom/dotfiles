@@ -1,0 +1,79 @@
+# dotfiles
+
+User configuration for `roger` (repo `vonbloom/dotfiles`, checked out at `~/.dotfiles`), managed
+with GNU stow. See `~/.claude/CLAUDE.md` for the machine context (immutable arkdep host + `userland`
+distrobox).
+
+## Layout and installation
+
+- Each top-level directory is a stow package whose tree mirrors `$HOME`
+  (e.g. `zsh/.config/zsh/.zshrc` -> `~/.config/zsh/.zshrc`).
+- Packages: `distrobox`, `git`, `gnupg`, `scripts`, `tmux`, `vscode`, `zsh`.
+- `./install [package]` (run from the repo root, it uses `$(pwd)`) restows one package or all of
+  them. It uses `--no-folding`, so stow links individual files, never whole directories. Prefer
+  it over calling `stow` directly; if you do, pass `--no-folding -t ~`.
+- A package can have an executable `install` hook at its root (`zsh/install`, `vscode/install`),
+  run after stowing. `install` and `README.md` files are not stowed.
+- Adding a file to a package only takes effect after restowing that package.
+- `.gitignore` excludes runtime files (`.zcompdump`, history, GnuPG keyrings and trustdb). Never
+  commit secrets or private keys.
+
+## Host vs container
+
+- `$HOME` is shared between the host and the distroboxes (`userland`, `playground`), so every file
+  here is used in all of them. Config that depends on installed software must work where it is missing (see `_have` in
+  `zsh/.config/zsh/utils.zsh`) or be kept per environment (`${CONTAINER_ID:-host}`).
+- Wrappers in `~/.local/bin` are on the PATH in both places. Do not shadow system commands with a
+  wrapper of the same name (e.g. `pacman`); the distrobox-exported wrappers handle this with
+  `$CONTAINER_ID` checks.
+- Containers are defined in `distrobox/.config/distrobox/default.ini`. `[playground]` is the bare
+  base (image, `[aur]` repo, fonts, podman remote) and `[userland]` is `include=playground` plus
+  its packages and exports. Included keys accumulate and cannot be cleared, so keep
+  `[playground]` to what its hooks need (`fontconfig` for `fc-cache`); never put userland's
+  packages or exports there.
+- `playground` is a throwaway box for trying packages. Once something is worth keeping, add it to
+  `[userland]` (`additional_packages`, and `exported_apps`/`exported_bins` if needed) and install
+  it in userland. Recreate a box with
+  `distrobox assemble create --replace --file ~/.config/distrobox/default.ini --name <box>`.
+  Host software goes in `~/archimg-builder` instead.
+- `distrobox-host-exec` does not work here (host-spawn needs flatpak, which the host lacks). Never
+  run podman in local mode inside a container (e.g. `--remote=false` or the host binary from
+  `/run/host`): it deletes the host's rootless `pause.pid`.
+- The container gets AUR packages (`brave-bin`, `visual-studio-code-bin`...) from a prebuilt pacman
+  repo `[aur]` at `http://192.168.2.38`, added by `pre_init_distrobox_assemble.sh`; plain
+  `pacman -Syu` updates them, no AUR helper.
+
+## zsh
+
+- `ZDOTDIR=$HOME/.config/zsh` is set in `/etc/zsh/zshenv` and the `XDG_*` variables in
+  `/etc/profile.d/xdg-vars.sh`; both come from the host image
+  (`~/archimg-builder/arkdep-build.d/depends/generic/overlay/post_install/etc/`), not from this
+  repo. The container inherits them from the host environment.
+- `.zshrc` sources `utils.zsh`, `history.zsh`, `prompt.zsh`, `alias.bash` (in bash emulation),
+  then `compinit` and `plugins.zsh`.
+- Plugins (`fzf-tab`, `zsh-autosuggestions`, `zsh-syntax-highlighting`) are cloned from GitHub into
+  `$XDG_DATA_HOME/zsh/plugins` by the autoloaded functions in `zsh/.local/share/zsh/functions`
+  (`install-`, `source-`, `update-zsh-plugins`). `fzf-tab` needs `fzf` installed, otherwise
+  ambiguous Tab completion does nothing.
+- The completion dump is per environment: `$XDG_CACHE_HOME/zsh/zcompdump-${CONTAINER_ID:-host}`.
+- History lives in `$XDG_CACHE_HOME/zsh/history` (the dir is created by `zsh/install`).
+
+## Scripts (`scripts/.local/bin`)
+
+- `arkdep-diff`: package diff between the running deployment and the previous one (run after
+  rebooting into a new deployment).
+- `userland [cmd...]` / `playground [cmd...]`: `distrobox enter <box> -- cmd`, or a shell with
+  no arguments. `playground` is a symlink to `userland` (box taken from `$0`); aliased to `ul`
+  and `pg` in `alias.bash` (shadowing util-linux `ul`/`pg` in interactive shells only). Inside
+  its own box it runs the command directly; from another container it refuses.
+
+## gnupg
+
+- GnuPG config plus `gpg-backup`, `gpg-restore` and `install-ssh-key` (SSH uses the GPG agent;
+  `SSH_AUTH_SOCK` is set in `.zprofile`). `./install gnupg` creates `~/.gnupg` with mode 700.
+
+## Conventions
+
+- Shell scripts: `#!/usr/bin/env bash` (or `/bin/sh` when POSIX is enough), tab indentation.
+- Commits: short imperative English sentence, no prefix (e.g. "Add vscode package"). Commits are
+  GPG-signed (`commit.gpgsign = true` in `git/.config/git/config`).
