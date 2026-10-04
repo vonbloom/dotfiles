@@ -41,7 +41,7 @@ distrobox).
   `/run/host`): it deletes the host's rootless `pause.pid`.
 - `pre_init_distrobox_assemble.sh` (runs as root on every container start) adds two repos after
   Arch's `[core]`/`[extra]`, in priority order: `[cachyos]` (generic x86_64 only, not the `-v3`
-  repos, so the base stays Arch) and `[aur]`, prebuilt AUR packages at `http://192.168.2.38`.
+  repos, so the base stays Arch) and `[aur]`, prebuilt AUR packages at `http://192.168.2.50/aur` (built by `~/aur-builder`).
   A package in both (e.g. `brave-bin`) comes from `[cachyos]`. Plain `pacman -Syu` updates
   everything, no AUR helper. The Arch image has no local pacman master key, so the hook runs
   `pacman-key --init` before lsigning the CachyOS key.

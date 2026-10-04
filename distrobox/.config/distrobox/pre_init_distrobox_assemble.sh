@@ -30,9 +30,16 @@ if ! grep -q '^\[cachyos\]' "$conf"; then
 	changed=1
 fi
 
+aur_server=http://192.168.2.50/aur
+
 if ! grep -q '^\[aur\]' "$conf"; then
 	echo "Adding [aur] repo..."
-	printf '\n[aur]\nSigLevel = Optional TrustAll\nServer = http://192.168.2.38\n' >> "$conf"
+	printf '\n[aur]\nSigLevel = Optional TrustAll\nServer = %s\n' "$aur_server" >> "$conf"
+	changed=1
+elif grep -q '^Server = http://192.168.2.38$' "$conf"; then
+	# Containers created before aur-builder replaced the LXC builder
+	echo "Moving [aur] repo to $aur_server..."
+	sed -i "s#^Server = http://192.168.2.38\$#Server = $aur_server#" "$conf"
 	changed=1
 fi
 
