@@ -1,0 +1,14 @@
+# Adwaita with colour icons for the two Thunar side pane entries that Adwaita only has as legacy
+# outline icons: Home (go-home) and Recent (document-open-recent). Everything else is Adwaita.
+[Icon Theme]
+Name=Adwaita-Sidebar
+Comment=Adwaita plus colour Home and Recent icons
+Inherits=Adwaita
+Directories=scalable/places
+
+[scalable/places]
+Size=128
+MinSize=8
+MaxSize=512
+Type=Scalable
+Context=Places

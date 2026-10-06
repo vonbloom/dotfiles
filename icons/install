@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Use Adwaita-Sidebar (Adwaita plus colour Home and Recent icons for Thunar's side pane). The
+# setting lives in dconf (~/.config/dconf), shared by the host and the userland distrobox.
+gsettings set org.gnome.desktop.interface icon-theme Adwaita-Sidebar

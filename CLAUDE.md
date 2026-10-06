@@ -43,6 +43,10 @@ distrobox).
   bus: `distrobox/.local/share/dbus-1/services/org.gtk.vfs.Daemon.service` starts
   `/usr/lib/gvfsd` in the container on demand. Same for xfconfd (`org.xfce.Xfconf.service`),
   which stores Thunar's preferences: without it Thunar forgets them on every start.
+- `icons/` is the icon theme `Adwaita-Sidebar`: Adwaita plus colour versions of the two icons
+  Thunar's side pane takes from AdwaitaLegacy (Home `go-home`, Recent `document-open-recent`,
+  built from Adwaita's folder-download and clock). Its install hook sets it with gsettings (dconf
+  is shared by the host and userland); the light/dark hook in the image only changes `gtk-theme`.
 - `pre_init_distrobox_assemble.sh` (runs as root on every container start) adds two repos after
   Arch's `[core]`/`[extra]`, in priority order: `[cachyos]` (generic x86_64 only, not the `-v3`
   repos, so the base stays Arch) and `[aur]`, prebuilt AUR packages at `http://192.168.2.50/aur` (built by `~/distro-builder/aur`).
