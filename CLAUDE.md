@@ -8,7 +8,7 @@ distrobox).
 
 - Each top-level directory is a stow package whose tree mirrors `$HOME`
   (e.g. `zsh/.config/zsh/.zshrc` -> `~/.config/zsh/.zshrc`).
-- Packages: `distrobox`, `git`, `gnupg`, `scripts`, `tmux`, `vscode`, `zsh`.
+- Packages: `distrobox`, `git`, `gnupg`, `icons`, `scripts`, `tmux`, `vscode`, `zsh`.
 - `./install [package]` (run from the repo root, it uses `$(pwd)`) restows one package or all of
   them. It uses `--no-folding`, so stow links individual files, never whole directories. Prefer
   it over calling `stow` directly; if you do, pass `--no-folding -t ~`.
@@ -64,7 +64,9 @@ distrobox).
   (`~/distro-builder/image/arkdep-build.d/depends/generic/overlay/post_install/etc/`), not from this
   repo. The container inherits them from the host environment.
 - `.zshrc` sources `utils.zsh`, `history.zsh`, `prompt.zsh`, `alias.bash` (in bash emulation),
-  then `compinit` and `plugins.zsh`.
+  then `compinit` and `plugins.zsh`. It does not start tmux: only the sway binding `Win+Enter`
+  (`foot tmux new-session -A -s main`, in the image) does; `Win+Shift+Enter`, VS Code, SSH and
+  ttys get a plain shell.
 - Plugins (`fzf-tab`, `zsh-autosuggestions`, `zsh-syntax-highlighting`) are cloned from GitHub into
   `$XDG_DATA_HOME/zsh/plugins` by the autoloaded functions in `zsh/.local/share/zsh/functions`
   (`install-`, `source-`, `update-zsh-plugins`). `fzf-tab` needs `fzf` installed, otherwise
