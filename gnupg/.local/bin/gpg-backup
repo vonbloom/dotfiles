@@ -1,20 +1,58 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# Back up the GnuPG keys into one dated tarball: secret keys (still protected by their
+# passphrase), public keys, owner trust and revocation certificates. Before writing it, the backup
+# is imported into a throwaway keyring and checked to contain every secret key and subkey.
+# Usage: gpg-backup [output_dir]   (default: the current directory)
 
-secret_file=secret.asc
-trust_file=trust.txt
-tmp_path=/tmp/gpg_backup
-output=gnupg_backup.tar.gz
+set -euo pipefail
+umask 077
 
-mkdir "$tmp_path"
+die() {
+	echo "gpg-backup: $*" >&2
+	exit 1
+}
 
-echo "Exporting secret keys and owner trust..."
-gpg --export-secret-keys --armor > "$tmp_path/$secret_file"
-gpg --export-ownertrust > "$tmp_path/$trust_file"
+out_dir=${1:-.}
+[[ -d $out_dir ]] || die "no such directory: $out_dir"
+output=$out_dir/gnupg-backup-$(date +%F).tar.gz
+[[ -e $output ]] && die "$output already exists, not overwriting it"
 
-echo "Packaging files..."
-tar -cPzvf "$output" "$tmp_path"
+gnupg=${GNUPGHOME:-$HOME/.gnupg}
+work=$(mktemp -d)
+cleanup() {
+	gpgconf --homedir "$work/check" --kill all 2>/dev/null || true
+	rm -rf "$work"
+}
+trap cleanup EXIT
+mkdir "$work/backup" "$work/check"
 
-echo "Cleaning temp files..."
-rm -rf "$tmp_path"
+# Key IDs of the secret keys and subkeys whose secret part is here (not stubs: field 15 "#")
+secret_ids() {
+	gpg --batch --with-colons --list-secret-keys |
+		awk -F: '($1 == "sec" || $1 == "ssb") && $15 != "#" { print $5 }' | sort
+}
 
-echo "Your backup is at $output"
+expected=$(secret_ids)
+[[ -n $expected ]] || die "no secret keys in $gnupg"
+
+echo "Exporting $(wc -l <<<"$expected") secret keys and subkeys (gpg asks for the passphrase)..."
+gpg --armor --export-secret-keys >"$work/backup/secret.asc"
+gpg --armor --export >"$work/backup/public.asc"
+gpg --export-ownertrust >"$work/backup/ownertrust.txt"
+if compgen -G "$gnupg/openpgp-revocs.d/*.rev" >/dev/null; then
+	cp -r "$gnupg/openpgp-revocs.d" "$work/backup/"
+else
+	echo "Warning: no revocation certificate. Create one and back up again:" >&2
+	echo "  gpg --output $gnupg/openpgp-revocs.d/<fingerprint>.rev --gen-revoke <fingerprint>" >&2
+fi
+
+echo "Verifying the backup in a throwaway keyring..."
+GNUPGHOME=$work/check gpg --batch --quiet --import "$work/backup/public.asc" "$work/backup/secret.asc"
+restored=$(GNUPGHOME=$work/check secret_ids)
+[[ $restored == "$expected" ]] ||
+	die "the backup does not restore the same secret keys (expected: ${expected//$'\n'/ }, got: ${restored//$'\n'/ })"
+
+tar -czf "$output" -C "$work/backup" .
+echo "Backup verified and written to $output:"
+tar -tzf "$output" | sed 's|^\./||; /^$/d; s/^/  /'
+echo "Keep copies off this laptop (USB stick, file server); restore with: gpg-restore $output"

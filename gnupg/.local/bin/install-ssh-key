@@ -1,17 +1,41 @@
-#!/bin/sh
-if [ "$#" -eq 0 ] || { [ "$#" -eq 1 ] && [ "$1" = "-u" ]; }; then
-	echo "Please specify a user@host where to install the ssh key"
+#!/usr/bin/env bash
+# Add one of the GnuPG authentication subkeys to ~/.ssh/authorized_keys on a remote host, or
+# remove it with -u. Matches whole lines, so it is idempotent.
+# Usage: install-ssh-key [-u] [-w] user@host
+#   -w  the work subkey (roger@apptramit.com) instead of the personal one (vonbloom@gmail.com)
+
+set -euo pipefail
+
+# Explicit subkeys ("!"): by uid, gpg --export-ssh-key would pick the newest one, the work subkey
+PERSONAL_SUBKEY=DD8A445D5646ACB4!
+WORK_SUBKEY=79687A6997265102!
+
+usage() {
+	echo "Usage: install-ssh-key [-u] [-w] user@host" >&2
 	exit 1
+}
+
+remove=0 subkey=$PERSONAL_SUBKEY
+while getopts uw opt; do
+	case $opt in
+	u) remove=1 ;;
+	w) subkey=$WORK_SUBKEY ;;
+	*) usage ;;
+	esac
+done
+shift $((OPTIND - 1))
+(($# == 1)) || usage
+host=$1
+
+ssh_key=$(gpg --export-ssh-key "$subkey")
+
+# The key travels on stdin, so no quoting of it on the remote command line
+if ((remove)); then
+	echo "Removing the ssh key from $host"
+	ssh "$host" 'f=~/.ssh/authorized_keys; read -r key; [ -f "$f" ] || exit 0;
+		grep -vxF "$key" "$f" >"$f.tmp" || true; cat "$f.tmp" >"$f"; rm -f "$f.tmp"' <<<"$ssh_key"
+else
+	echo "Installing the ssh key on $host"
+	ssh "$host" 'umask 077; mkdir -p ~/.ssh; f=~/.ssh/authorized_keys; read -r key;
+		touch "$f"; grep -qxF "$key" "$f" || echo "$key" >>"$f"' <<<"$ssh_key"
 fi
-
-ssh_key=$(gpg --export-ssh-key vonbloom@gmail.com)
-remote_path='~/.ssh/authorized_keys'
-
-if [ "$1" = "-u" ]; then
-	echo "Uninstalling ssh key from $2"
-	ssh "$2" "sed -i '/^$ssh_key$/d' $remote_path"
-	exit 0
-fi
-
-echo "Installing ssh key to $1"
-ssh "$1" "grep -q $(echo \"$ssh_key\") $remote_path || echo $ssh_key >> $remote_path"

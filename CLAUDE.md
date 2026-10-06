@@ -91,6 +91,12 @@ distrobox).
 
 - GnuPG config plus `gpg-backup`, `gpg-restore` and `install-ssh-key` (SSH uses the GPG agent;
   `SSH_AUTH_SOCK` is set in `.zprofile`). `./install gnupg` creates `~/.gnupg` with mode 700.
+- This key is the root of everything: it decrypts the homelab vault password, and the vault holds
+  the distro-builder signing key. `gpg-backup` must stay verified (it imports the backup into a
+  throwaway keyring before writing it); test changes with throwaway keys in a temp `GNUPGHOME`,
+  never against `~/.gnupg`.
+- `sshcontrol` lists both authentication subkeys. gpg-agent replaces the stow link with a plain
+  file when `ssh-add` adds a key: copy it back into the package afterwards.
 
 ## Conventions
 

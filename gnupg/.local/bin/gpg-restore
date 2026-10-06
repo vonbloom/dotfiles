@@ -1,16 +1,43 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# Restore a gpg-backup tarball: public and secret keys, owner trust and revocation certificates.
+# Keys already in the keyring are merged, existing revocation certificates are kept.
+# Usage: gpg-restore <gnupg-backup-YYYY-MM-DD.tar.gz>
 
-secret_file=secret.asc
-trust_file=trust.txt
-tmp_path=/tmp/gpg_backup
-output=gnupg_backup.tar.gz
+set -euo pipefail
+umask 077
 
-echo "Extracting backup..."
-tar -xPzvf "$output"
+die() {
+	echo "gpg-restore: $*" >&2
+	exit 1
+}
 
-echo "Importing secret keys and owner trust..."
-gpg --import "$tmp_path/$secret_file"
-gpg --import-ownertrust < "$tmp_path/$trust_file"
+backup=${1:-}
+[[ -n $backup ]] || die "usage: gpg-restore <gnupg-backup-YYYY-MM-DD.tar.gz>"
+[[ -r $backup ]] || die "cannot read $backup"
 
-echo "Cleaning temp files..."
-rm -rf "$tmp_path"
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+tar -xzf "$backup" -C "$work"
+for f in secret.asc public.asc ownertrust.txt; do
+	[[ -s $work/$f ]] || die "$backup is not a gpg-backup archive ($f missing or empty)"
+done
+
+gnupg=${GNUPGHOME:-$HOME/.gnupg}
+mkdir -p "$gnupg"
+chmod 700 "$gnupg"
+
+echo "Importing keys and owner trust..."
+gpg --batch --import "$work/public.asc" "$work/secret.asc"
+gpg --import-ownertrust <"$work/ownertrust.txt"
+
+if [[ -d $work/openpgp-revocs.d ]]; then
+	mkdir -p "$gnupg/openpgp-revocs.d"
+	for rev in "$work"/openpgp-revocs.d/*; do
+		[[ -e $gnupg/openpgp-revocs.d/${rev##*/} ]] || cp "$rev" "$gnupg/openpgp-revocs.d/"
+	done
+fi
+
+gpgconf --reload gpg-agent
+echo
+gpg --list-secret-keys
+echo "Restored. SSH uses the authentication subkeys listed in $gnupg/sshcontrol."
