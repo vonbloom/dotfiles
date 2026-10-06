@@ -70,7 +70,9 @@ distrobox).
 - Plugins (`fzf-tab`, `zsh-autosuggestions`, `zsh-syntax-highlighting`) are cloned from GitHub into
   `$XDG_DATA_HOME/zsh/plugins` by the autoloaded functions in `zsh/.local/share/zsh/functions`
   (`install-`, `source-`, `update-zsh-plugins`). `fzf-tab` needs `fzf` installed, otherwise
-  ambiguous Tab completion does nothing.
+  ambiguous Tab completion does nothing. Order matters: `compinit`, then `fzf --zsh` (it binds
+  Tab to its own completion), then the plugins, so that fzf-tab takes Tab back and
+  syntax-highlighting wraps every widget.
 - The completion dump is per environment: `$XDG_CACHE_HOME/zsh/zcompdump-${CONTAINER_ID:-host}`.
 - History lives in `$XDG_CACHE_HOME/zsh/history` (the dir is created by `zsh/install`).
 

@@ -3,7 +3,7 @@
 # Encapsulate in an IIFE to keep the namespace clean
 () {
     # 1. Load Modules
-    autoload -Uz add-zsh-hook vcs_info
+    autoload -Uz add-zsh-hook add-zle-hook-widget vcs_info
 
     # 2. Keybindings & Vi Mode Configuration
     bindkey -v
@@ -22,9 +22,10 @@
 
     # 4. Global State
     typeset -g CMD_START_TIME=""
+    typeset -g _PROMPT_SHORT=""
 
     # 5. Optimized Helper Functions
-		_get_distrobox_info() {
+    _get_distrobox_info() {
         # Distrobox typically exports $CONTAINER_ID inside the container
         if [[ -n $CONTAINER_ID || -f /run/.containerenv ]]; then
             # Use CONTAINER_ID if available, otherwise fallback to "container"
@@ -47,13 +48,18 @@
 
         # Dynamic SSH Check
         local ssh_info=""
-        [[ -n $SSH_CONNECTION ]] && ssh_info="%F{purple}%n@%M%f "
+        [[ -n $SSH_CONNECTION ]] && ssh_info="%F{magenta}%n@%M%f "
 
         # Get Distrobox Info
         local distro_info=$(_get_distrobox_info)
 
         # Assemble PROMPT
         PROMPT=$'\n'"${distro_info}${ssh_info}%F{${path_color}}%~%f ${vcs_info_msg_0_}"$'\n'"%F{${sym_col}}❯%f "
+
+        # One-line version left on screen once the command is accepted (transient prompt)
+        local user_sym="green"
+        [[ $UID -eq 0 ]] && user_sym="208"
+        _PROMPT_SHORT=$'\n'"${distro_info}${ssh_info}%F{${path_color}}%~%f %F{${user_sym}}❯%f "
 
         # Assemble RPROMPT (Timer)
         RPROMPT=""
@@ -67,12 +73,14 @@
 
     _prompt_preexec() {
         CMD_START_TIME=$SECONDS
+    }
 
-        if [[ "$TERM" != "dumb" ]]; then
-            local trans_sym="%F{green}❯%f"
-            [[ $UID -eq 0 ]] && trans_sym="%F{orange}❯%f"
-            print -Pn "\e[1A\e[K${trans_sym} ${1}\n"
-        fi
+    # Transient prompt: when a line is accepted, redraw it with the one-line prompt. ZLE knows the
+    # height of the prompt and of the command, so multi-line commands are redrawn correctly
+    _prompt_transient() {
+        PROMPT=$_PROMPT_SHORT
+        RPROMPT=""
+        zle reset-prompt
     }
 
     # 7. Cursor Shape Management
@@ -89,6 +97,7 @@
 
     add-zsh-hook preexec _prompt_preexec
     add-zsh-hook precmd _prompt_precmd
+    add-zle-hook-widget line-finish _prompt_transient
 
     print -n "\e[5 q" # Start with beam cursor
 }

@@ -32,10 +32,9 @@ _zcompdump="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump-${CONTAINER_ID:-host}"
 autoload -Uz compinit && compinit -i -d "$_zcompdump"
 unset _zcompdump
 
-# Load plugins
-source "$ZDOTDIR/plugins.zsh"
-
-# Shell integrations
+# fzf key bindings (Ctrl+R history, Ctrl+T files, Alt+C cd). Before the plugins: fzf also binds
+# Tab to its own completion, and fzf-tab (loaded next) must take Tab over again
 _have fzf && source <(fzf --zsh)
 
-# [[ $(pgrep -cx "$TERMINAL") -eq 2 ]] && _have fastfetch && fastfetch
+# Load plugins
+source "$ZDOTDIR/plugins.zsh"

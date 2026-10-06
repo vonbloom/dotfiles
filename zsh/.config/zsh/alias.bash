@@ -19,7 +19,7 @@ alias gl='git log'
 alias gar='git add --all && git reset --hard'
 alias gfa='git fetch --all --prune'
 
-alias fcd='cd $(find -d | fzf -e --exact)'
+alias fcd='cd "$(find . -type d | fzf -e)"'
 alias open='xdg-open'
 
 man() {

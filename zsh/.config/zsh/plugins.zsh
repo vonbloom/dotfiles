@@ -10,8 +10,6 @@ local base_dir="$XDG_DATA_HOME/zsh/plugins"
 
 install-zsh-plugins
 
-zcompile $base_dir/**/*.zsh 2>/dev/null
-
 source-zsh-plugins
 
 unset plugin base_dir
