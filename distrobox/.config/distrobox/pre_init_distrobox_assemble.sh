@@ -12,14 +12,21 @@ fi
 
 conf=/etc/pacman.conf
 cachyos_key=F3B607488DB35A47
+# [aur] is signed by the build server (distro-builder: keys/distro-builder.asc, copied here)
+aur_key=CF471E6685974BF43EA113623F9EBD77B1E60E55
+aur_key_file=$(dirname "$(readlink -f "$0")")/distro-builder.asc
 changed=0
 
-if ! grep -q '^\[cachyos\]' "$conf"; then
-	echo "Adding [cachyos] repo..."
-	# The Arch image ships without a local master key, which --lsign-key needs
+# The Arch image ships without a local master key, which --lsign-key needs
+ensure_keyring() {
 	if ! gpg --homedir /etc/pacman.d/gnupg --list-secret-keys --with-colons 2>/dev/null | grep -q '^sec'; then
 		pacman-key --init
 	fi
+}
+
+if ! grep -q '^\[cachyos\]' "$conf"; then
+	echo "Adding [cachyos] repo..."
+	ensure_keyring
 	pacman-key --recv-keys "$cachyos_key" --keyserver keyserver.ubuntu.com
 	pacman-key --lsign-key "$cachyos_key"
 	if grep -q '^\[aur\]' "$conf"; then
@@ -30,13 +37,27 @@ if ! grep -q '^\[cachyos\]' "$conf"; then
 	changed=1
 fi
 
+if ! pacman-key --list-keys "$aur_key" &>/dev/null; then
+	echo "Trusting the [aur] signing key..."
+	ensure_keyring
+	pacman-key --add "$aur_key_file"
+	pacman-key --lsign-key "$aur_key" # fails if the file holds another key
+fi
+
 aur_server=http://192.168.2.50/aur
 
 if ! grep -q '^\[aur\]' "$conf"; then
 	echo "Adding [aur] repo..."
-	printf '\n[aur]\nSigLevel = Optional TrustAll\nServer = %s\n' "$aur_server" >> "$conf"
+	printf '\n[aur]\nSigLevel = Required\nServer = %s\n' "$aur_server" >> "$conf"
 	changed=1
-elif grep -q '^Server = http://192.168.2.38$' "$conf"; then
+elif sed -n '/^\[aur\]/,/^\[/p' "$conf" | grep -q '^SigLevel = Optional TrustAll$'; then
+	# Containers created before [aur] was signed
+	echo "Requiring signatures for [aur]..."
+	sed -i '/^\[aur\]/,/^\[/ s/^SigLevel = Optional TrustAll$/SigLevel = Required/' "$conf"
+	changed=1
+fi
+
+if grep -q '^Server = http://192.168.2.38$' "$conf"; then
 	# Containers created before aur-builder replaced the LXC builder
 	echo "Moving [aur] repo to $aur_server..."
 	sed -i "s#^Server = http://192.168.2.38\$#Server = $aur_server#" "$conf"

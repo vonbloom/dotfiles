@@ -51,7 +51,9 @@ distrobox).
   Arch's `[core]`/`[extra]`, in priority order: `[cachyos]` (generic x86_64 only, not the `-v3`
   repos, so the base stays Arch) and `[aur]`, prebuilt AUR packages at `http://192.168.2.50/aur` (built by `~/distro-builder/aur`).
   A package in both (e.g. `brave-bin`) comes from `[cachyos]`. Plain `pacman -Syu` updates
-  everything, no AUR helper. The Arch image has no local pacman master key, so the hook runs
+  everything, no AUR helper. `[aur]` is signed by the build server: the hook trusts
+  `distrobox/.config/distrobox/distro-builder.asc` (a copy of distro-builder's `keys/`; replace
+  both if the key changes) and sets `SigLevel = Required`, also in existing containers. The Arch image has no local pacman master key, so the hook runs
   `pacman-key --init` before lsigning the CachyOS key.
 - VS Code must stay Microsoft's build (`visual-studio-code-bin` from `[aur]`): CachyOS only has
   Code-OSS (`code`) and `vscodium`, which cannot use the Dev Containers extension the `tramit-*`
