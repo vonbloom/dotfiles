@@ -35,13 +35,17 @@ distrobox).
   `[userland]` (`additional_packages`, and `exported_apps`/`exported_bins` if needed) and install
   it in userland. Recreate a box with
   `distrobox assemble create --replace --file ~/.config/distrobox/default.ini --name <box>`.
-  Host software goes in `~/archimg-builder` instead.
+  Host software goes in `~/distro-builder/image` instead.
 - `distrobox-host-exec` does not work here (host-spawn needs flatpak, which the host lacks). Never
   run podman in local mode inside a container (e.g. `--remote=false` or the host binary from
   `/run/host`): it deletes the host's rootless `pause.pid`.
+- gvfs (Thunar `smb://` mounts) runs in userland, but D-Bus activation uses the host's session
+  bus: `distrobox/.local/share/dbus-1/services/org.gtk.vfs.Daemon.service` starts
+  `/usr/lib/gvfsd` in the container on demand. Same for xfconfd (`org.xfce.Xfconf.service`),
+  which stores Thunar's preferences: without it Thunar forgets them on every start.
 - `pre_init_distrobox_assemble.sh` (runs as root on every container start) adds two repos after
   Arch's `[core]`/`[extra]`, in priority order: `[cachyos]` (generic x86_64 only, not the `-v3`
-  repos, so the base stays Arch) and `[aur]`, prebuilt AUR packages at `http://192.168.2.50/aur` (built by `~/aur-builder`).
+  repos, so the base stays Arch) and `[aur]`, prebuilt AUR packages at `http://192.168.2.50/aur` (built by `~/distro-builder/aur`).
   A package in both (e.g. `brave-bin`) comes from `[cachyos]`. Plain `pacman -Syu` updates
   everything, no AUR helper. The Arch image has no local pacman master key, so the hook runs
   `pacman-key --init` before lsigning the CachyOS key.
@@ -53,7 +57,7 @@ distrobox).
 
 - `ZDOTDIR=$HOME/.config/zsh` is set in `/etc/zsh/zshenv` and the `XDG_*` variables in
   `/etc/profile.d/xdg-vars.sh`; both come from the host image
-  (`~/archimg-builder/arkdep-build.d/depends/generic/overlay/post_install/etc/`), not from this
+  (`~/distro-builder/image/arkdep-build.d/depends/generic/overlay/post_install/etc/`), not from this
   repo. The container inherits them from the host environment.
 - `.zshrc` sources `utils.zsh`, `history.zsh`, `prompt.zsh`, `alias.bash` (in bash emulation),
   then `compinit` and `plugins.zsh`.
