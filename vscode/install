@@ -5,19 +5,26 @@ EXTENSIONS=(
 )
 
 echo "Checking VS Code extensions..."
-INSTALLED=$(code --list-extensions | tr '[:upper:]' '[:lower:]')
+# The host's code is the userland export in ~/.local/bin, not on the PATH of a non-login shell
+# (e.g. a command over SSH)
+PATH=$PATH:$HOME/.local/bin
+if ! command -v code >/dev/null; then
+    echo "code not found: extensions not checked"
+else
+    INSTALLED=$(code --list-extensions | tr '[:upper:]' '[:lower:]')
 
-for ext in "${EXTENSIONS[@]}"; do
-    ext_lower=$(echo "$ext" | tr '[:upper:]' '[:lower:]')
-    if echo "$INSTALLED" | grep -q "^${ext_lower}$"; then
-        echo "Already installed: $ext"
-    else
-        echo "Installing: $ext..."
-        code --install-extension "$ext"
-    fi
-done
+    for ext in "${EXTENSIONS[@]}"; do
+        ext_lower=$(echo "$ext" | tr '[:upper:]' '[:lower:]')
+        if echo "$INSTALLED" | grep -q "^${ext_lower}$"; then
+            echo "Already installed: $ext"
+        else
+            echo "Installing: $ext..."
+            code --install-extension "$ext"
+        fi
+    done
 
-echo "Extensions are up to date!"
+    echo "Extensions are up to date!"
+fi
 
 # The host's Secret Service (gnome-keyring, unlocked at login) for tokens and passwords: on sway
 # VS Code does not detect it and falls back to its weak "basic" encryption. argv.json is written
