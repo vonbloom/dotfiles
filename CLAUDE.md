@@ -59,6 +59,8 @@ distrobox).
   minutes (`deploy-userland` in the image starts it at any login, SSH too), and ending the session
   or rebooting meanwhile stops the container in the middle of a pacman transaction; every later
   start then failed with "unable to lock database" (seen on the bootc T480 rehearsal, 2026-10-08).
+- Init hooks are joined with `&&` and a failing one aborts the box setup before `assemble` exports
+  the apps and binaries (exports only happen when a box is created): `fc-cache -f || true`.
 - Package hooks that call `systemctl` fail in the boxes (no systemd as PID 1). The hook disables
   them with a `/dev/null` link of the same name in `/etc/pacman.d/hooks`: so far openssh's
   `10-openssh-mark-sshd-for-restart.hook` (openssh 10.6, every upgrade). Add new ones there.
