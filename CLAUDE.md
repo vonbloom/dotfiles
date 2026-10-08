@@ -59,6 +59,9 @@ distrobox).
   minutes (`deploy-userland` in the image starts it at any login, SSH too), and ending the session
   or rebooting meanwhile stops the container in the middle of a pacman transaction; every later
   start then failed with "unable to lock database" (seen on the bootc T480 rehearsal, 2026-10-08).
+- Package hooks that call `systemctl` fail in the boxes (no systemd as PID 1). The hook disables
+  them with a `/dev/null` link of the same name in `/etc/pacman.d/hooks`: so far openssh's
+  `10-openssh-mark-sshd-for-restart.hook` (openssh 10.6, every upgrade). Add new ones there.
 - VS Code must stay Microsoft's build (`visual-studio-code-bin` from `[aur]`): CachyOS only has
   Code-OSS (`code`) and `vscodium`, which cannot use the Dev Containers extension the `tramit-*`
   projects rely on.

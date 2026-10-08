@@ -18,6 +18,12 @@ if [ -e /var/lib/pacman/db.lck ]; then
 	rm -f /var/lib/pacman/db.lck
 fi
 
+# Package hooks that call systemctl fail without systemd as PID 1 ("System has not been booted with
+# systemd"). openssh (installed by distrobox, no sshd runs here) marks sshd for restart on every
+# upgrade. A /dev/null link in /etc/pacman.d/hooks disables the hook of the same name.
+mkdir -p /etc/pacman.d/hooks
+ln -sf /dev/null /etc/pacman.d/hooks/10-openssh-mark-sshd-for-restart.hook
+
 conf=/etc/pacman.conf
 cachyos_key=F3B607488DB35A47
 # [aur] is signed by the build server (distro-builder: keys/distro-builder.asc, copied here)

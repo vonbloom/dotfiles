@@ -16,5 +16,6 @@
     "chat.titleBar.signIn.enabled": false,
     "security.workspace.trust.untrustedFiles": "open",
     "aws.cloudformation.telemetry.enabled": false,
-    "claudeCode.hideOnboarding": true
+    "claudeCode.hideOnboarding": true,
+    "window.menuBarVisibility": "compact"
 }
