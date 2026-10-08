@@ -10,6 +10,14 @@ if [ ! -f /etc/arch-release ]; then
 	exit 0
 fi
 
+# A container stopped in the middle of a pacman transaction keeps the lock, and every later start
+# fails ("unable to lock database"). The first setup takes minutes, and logging out or rebooting
+# stops the user's containers. Nothing else runs in the container yet at this point.
+if [ -e /var/lib/pacman/db.lck ]; then
+	echo "Removing the pacman lock of an interrupted transaction..."
+	rm -f /var/lib/pacman/db.lck
+fi
+
 conf=/etc/pacman.conf
 cachyos_key=F3B607488DB35A47
 # [aur] is signed by the build server (distro-builder: keys/distro-builder.asc, copied here)

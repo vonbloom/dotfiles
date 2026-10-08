@@ -55,6 +55,10 @@ distrobox).
   `distrobox/.config/distrobox/distro-builder.asc` (a copy of distro-builder's `keys/`; replace
   both if the key changes) and sets `SigLevel = Required`, also in existing containers. The Arch image has no local pacman master key, so the hook runs
   `pacman-key --init` before lsigning the CachyOS key.
+- The hook also removes a leftover `/var/lib/pacman/db.lck`: the first setup of `userland` takes
+  minutes (`deploy-userland` in the image starts it at any login, SSH too), and ending the session
+  or rebooting meanwhile stops the container in the middle of a pacman transaction; every later
+  start then failed with "unable to lock database" (seen on the bootc T480 rehearsal, 2026-10-08).
 - VS Code must stay Microsoft's build (`visual-studio-code-bin` from `[aur]`): CachyOS only has
   Code-OSS (`code`) and `vscodium`, which cannot use the Dev Containers extension the `tramit-*`
   projects rely on.
