@@ -10,6 +10,13 @@
 #
 # ----------------------------------------------
 
+# gpg-agent asks for the passphrase (also of the SSH keys it holds) where the last interactive shell
+# is: a dialog in a sway terminal, a prompt in the terminal itself over SSH (no display: pinentry-gtk
+# falls back to curses). Without it an SSH session to this machine could not unlock the key, and
+# ssh fell back to the keys in ~/.ssh and asked for theirs
+export GPG_TTY=$TTY
+(( $+commands[gpg-connect-agent] )) && gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
+
 # Load user functions
 fpath=( "$XDG_DATA_HOME/zsh/functions" $fpath )
 autoload -Uz install-zsh-plugins source-zsh-plugins update-zsh-plugins
