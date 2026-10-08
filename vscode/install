@@ -18,3 +18,12 @@ for ext in "${EXTENSIONS[@]}"; do
 done
 
 echo "Extensions are up to date!"
+
+# The host's Secret Service (gnome-keyring, unlocked at login) for tokens and passwords: on sway
+# VS Code does not detect it and falls back to its weak "basic" encryption. argv.json is written
+# by VS Code itself (crash reporter id), so the key is added rather than the file stowed
+ARGV=$HOME/.vscode/argv.json
+if [[ -f $ARGV ]] && ! grep -q '"password-store"' "$ARGV"; then
+    sed -i '0,/^{/s//{\n\t"password-store": "gnome-libsecret",/' "$ARGV"
+    echo "argv.json: password-store gnome-libsecret (restart VS Code)"
+fi

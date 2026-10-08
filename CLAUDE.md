@@ -8,7 +8,7 @@ distrobox).
 
 - Each top-level directory is a stow package whose tree mirrors `$HOME`
   (e.g. `zsh/.config/zsh/.zshrc` -> `~/.config/zsh/.zshrc`).
-- Packages: `distrobox`, `git`, `gnupg`, `icons`, `scripts`, `tmux`, `vscode`, `zsh`.
+- Packages: `brave`, `distrobox`, `git`, `gnupg`, `icons`, `scripts`, `tmux`, `vscode`, `zsh`.
 - `./install [package]` (run from the repo root, it uses `$(pwd)`) restows one package or all of
   them. It uses `--no-folding`, so stow links individual files, never whole directories. Prefer
   it over calling `stow` directly; if you do, pass `--no-folding -t ~`.
@@ -104,6 +104,10 @@ distrobox).
   the distro-builder signing key. `gpg-backup` must stay verified (it imports the backup into a
   throwaway keyring before writing it); test changes with throwaway keys in a temp `GNUPGHOME`,
   never against `~/.gnupg`.
+- `gpg-agent.conf` pins `pinentry-gtk`: since gnome-keyring brought gcr into the image
+  (2026-10-08), the `/usr/bin/pinentry` wrapper picks pinentry-gnome3 first, a GNOME prompt with
+  another style. A plain file instead of the stow link (as on the P14s until then) misses changes:
+  check with `ls -la ~/.gnupg`.
 - `sshcontrol` lists both authentication subkeys. gpg-agent replaces the stow link with a plain
   file when `ssh-add` adds a key: copy it back into the package afterwards.
 
@@ -112,3 +116,11 @@ distrobox).
 - Shell scripts: `#!/usr/bin/env bash` (or `/bin/sh` when POSIX is enough), tab indentation.
 - Commits: short imperative English sentence, no prefix (e.g. "Add vscode package"). Commits are
   GPG-signed (`commit.gpgsign = true` in `git/.config/git/config`).
+
+## Secret Service
+
+- Brave and VS Code (userland box) keep their secrets in the host's gnome-keyring (image, sway layer:
+  unlocked at the tty login by pam_gnome_keyring), reached on the shared session bus. On sway they do
+  not detect it: `brave/.config/brave-flags.conf` and the `vscode` install hook (key added to
+  `~/.vscode/argv.json`) set `--password-store=gnome-libsecret`. Brave still reads the data it
+  encrypted with its "basic" store before; VS Code may ask to sign in again.
