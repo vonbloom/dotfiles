@@ -108,17 +108,21 @@ distrobox).
   (2026-10-08), the `/usr/bin/pinentry` wrapper picks pinentry-gnome3 first, a GNOME prompt with
   another style. A plain file instead of the stow link (as on the P14s until then) misses changes:
   check with `ls -la ~/.gnupg`.
-- `ssh/.ssh/config` runs `gpg-connect-agent updatestartuptty` before every connection (`Match host *
-  exec`, also for git, scp and Ansible): the ssh-agent protocol does not say where to ask for the
-  passphrase, so the agent asks on the terminal (`GPG_TTY`, exported by `.zshrc`) and display it
-  was last pointed at. That gives a dialog on the desktop and a prompt in the terminal over SSH
-  (without it, ssh in an SSH session could not unlock the key and fell back to the keys in
-  `~/.ssh`: the T480's old `id_rsa` asked for its passphrase). Until 2026-10-09 `.zshrc` did it in
-  every new shell: after an SSH session to the P14s closed, the agent still asked on its gone
-  terminal and ssh on the desktop failed with "agent refused operation". The config only has
-  generic settings; hosts of one machine go in `~/.ssh/config.d/` (included, not in the repo).
-  When a machine already has a `~/.ssh/config`, move it to `~/.ssh/config.d/local` before
-  `./install ssh` (stow does not overwrite files).
+- `ssh/.ssh/config` runs `gpg-connect-agent updatestartuptty` before every connection
+  (`KnownHostsCommand /bin/sh -c ...`, also for git, scp and Ansible): the ssh-agent protocol does
+  not say where to ask for the passphrase, so the agent asks on the terminal (`GPG_TTY`, exported by
+  `.zshrc`) and display it was last pointed at. That gives a dialog on the desktop and a prompt in
+  the terminal over SSH (without it, ssh in an SSH session could not unlock the key and fell back to
+  the keys in `~/.ssh`: the T480's old `id_rsa` asked for its passphrase). Until 2026-10-09 `.zshrc`
+  did it in every new shell: after an SSH session to the P14s closed, the agent still asked on its
+  gone terminal and ssh on the desktop failed with "agent refused operation". `Match exec` (the
+  first version, 2026-10-09) runs through `$SHELL`, which distrobox sets to `zsh` without a path in
+  its boxes: ssh refused it ("Shell "zsh" is not executable") and Ansible and git in userland broke.
+  KnownHostsCommand runs its program directly (a literal absolute path: tokens and `${HOME}` only
+  expand in the arguments), while checking the host key, before authenticating. The config only has
+  generic settings; hosts of one machine go in `~/.ssh/config.d/` (included, not in the repo). When
+  a machine already has a `~/.ssh/config`, move it to `~/.ssh/config.d/local` before `./install ssh`
+  (stow does not overwrite files).
 - `sshcontrol` lists both authentication subkeys. gpg-agent replaces the stow link with a plain
   file when `ssh-add` adds a key: copy it back into the package afterwards.
 
