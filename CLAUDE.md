@@ -8,7 +8,7 @@ distrobox).
 
 - Each top-level directory is a stow package whose tree mirrors `$HOME`
   (e.g. `zsh/.config/zsh/.zshrc` -> `~/.config/zsh/.zshrc`).
-- Packages: `brave`, `distrobox`, `git`, `gnupg`, `icons`, `scripts`, `tmux`, `vscode`, `zsh`.
+- Packages: `brave`, `distrobox`, `git`, `gnupg`, `icons`, `scripts`, `ssh`, `tmux`, `vscode`, `zsh`.
 - `./install [package]` (run from the repo root, it uses `$(pwd)`) restows one package or all of
   them. It uses `--no-folding`, so stow links individual files, never whole directories. Prefer
   it over calling `stow` directly; if you do, pass `--no-folding -t ~`.
@@ -108,10 +108,17 @@ distrobox).
   (2026-10-08), the `/usr/bin/pinentry` wrapper picks pinentry-gnome3 first, a GNOME prompt with
   another style. A plain file instead of the stow link (as on the P14s until then) misses changes:
   check with `ls -la ~/.gnupg`.
-- `.zshrc` runs `gpg-connect-agent updatestartuptty` in every interactive shell: gpg-agent's
-  pinentry (also for SSH) goes to the last terminal and its display, so over SSH the prompt
-  appears in that terminal. Without it, ssh in an SSH session could not unlock the key and fell
-  back to the keys in `~/.ssh` (the T480's old `id_rsa` asked for its passphrase).
+- `ssh/.ssh/config` runs `gpg-connect-agent updatestartuptty` before every connection (`Match host *
+  exec`, also for git, scp and Ansible): the ssh-agent protocol does not say where to ask for the
+  passphrase, so the agent asks on the terminal (`GPG_TTY`, exported by `.zshrc`) and display it
+  was last pointed at. That gives a dialog on the desktop and a prompt in the terminal over SSH
+  (without it, ssh in an SSH session could not unlock the key and fell back to the keys in
+  `~/.ssh`: the T480's old `id_rsa` asked for its passphrase). Until 2026-10-09 `.zshrc` did it in
+  every new shell: after an SSH session to the P14s closed, the agent still asked on its gone
+  terminal and ssh on the desktop failed with "agent refused operation". The config only has
+  generic settings; hosts of one machine go in `~/.ssh/config.d/` (included, not in the repo).
+  When a machine already has a `~/.ssh/config`, move it to `~/.ssh/config.d/local` before
+  `./install ssh` (stow does not overwrite files).
 - `sshcontrol` lists both authentication subkeys. gpg-agent replaces the stow link with a plain
   file when `ssh-add` adds a key: copy it back into the package afterwards.
 
