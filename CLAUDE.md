@@ -8,7 +8,7 @@ distrobox).
 
 - Each top-level directory is a stow package whose tree mirrors `$HOME`
   (e.g. `zsh/.config/zsh/.zshrc` -> `~/.config/zsh/.zshrc`).
-- Packages: `brave`, `distrobox`, `git`, `gnupg`, `icons`, `scripts`, `ssh`, `tmux`, `vscode`, `zsh`.
+- Packages: `brave`, `git`, `gnupg`, `icons`, `scripts`, `ssh`, `tmux`, `vscode`, `zsh`.
 - `./install [package]` (run from the repo root, it uses `$(pwd)`) restows one package or all of
   them. It uses `--no-folding`, so stow links individual files, never whole directories. Prefer
   it over calling `stow` directly; if you do, pass `--no-folding -t ~`.
@@ -21,49 +21,35 @@ distrobox).
 ## Host vs container
 
 - `$HOME` is shared between the host and the distroboxes (`userland`, `playground`), so every file
-  here is used in all of them. Config that depends on installed software must work where it is missing (see `_have` in
-  `zsh/.config/zsh/utils.zsh`) or be kept per environment (`${CONTAINER_ID:-host}`).
+  here is used in all of them. Config that depends on installed software must work where it is
+  missing (see `_have` in `zsh/.config/zsh/utils.zsh`) or be kept per environment
+  (`${CONTAINER_ID:-host}`).
 - Wrappers in `~/.local/bin` are on the PATH in both places. Do not shadow system commands with a
   wrapper of the same name (e.g. `pacman`); the distrobox-exported wrappers handle this with
   `$CONTAINER_ID` checks.
-- Containers are defined in `distrobox/.config/distrobox/default.ini`. `[playground]` is the bare
-  base (image, `[aur]` repo, fonts, podman remote) and `[userland]` is `include=playground` plus
-  its packages and exports. Included keys accumulate and cannot be cleared, so keep
-  `[playground]` to what its hooks need (`fontconfig` for `fc-cache`); never put userland's
-  packages or exports there.
-- `playground` is a throwaway box for trying packages. Once something is worth keeping, add it to
-  `[userland]` (`additional_packages`, and `exported_apps`/`exported_bins` if needed) and install
-  it in userland. Recreate a box with
-  `distrobox assemble create --replace --file ~/.config/distrobox/default.ini --name <box>`.
-  Host software goes in `~/distro-builder/image` instead.
+- The boxes (`userland`, `playground`) are not defined here any more: they come from the userland
+  image that `~/distro-builder/userland` builds (packages, exports, box manifest; see its README),
+  created and replaced by `userland-update` in the host image. Until 2026-10-09 this repo had a
+  `distrobox` package (`default.ini`, a pre-init hook adding the `[cachyos]` and `[aur]` repos, the
+  D-Bus services): the boxes were assembled from `archlinux:latest` and upgraded in place.
+- `playground` is the box for trying packages: the same image as userland, left alone by
+  `userland-update` (`--playground` moves it to userland's image and reinstalls what was added).
+  Once a package is worth keeping, add it to distro-builder's `userland/packages.list` (and to the
+  exports in `userland/distrobox.ini` if the host must see it). Host software goes in
+  `~/distro-builder/image` instead.
 - `distrobox-host-exec` does not work here (host-spawn needs flatpak, which the host lacks). Never
   run podman in local mode inside a container (e.g. `--remote=false` or the host binary from
-  `/run/host`): it deletes the host's rootless `pause.pid`.
-- gvfs (Thunar `smb://` mounts) runs in userland, but D-Bus activation uses the host's session
-  bus: `distrobox/.local/share/dbus-1/services/org.gtk.vfs.Daemon.service` starts
-  `/usr/lib/gvfsd` in the container on demand. Same for xfconfd (`org.xfce.Xfconf.service`),
-  which stores Thunar's preferences: without it Thunar forgets them on every start.
+  `/run/host`): it deletes the host's rootless `pause.pid` (the image makes `podman` the remote
+  client).
+- distrobox sets `SHELL` to the shell's name without a path (`zsh`) in its boxes: tools that need
+  an absolute `$SHELL` fail there (ssh's `Match exec` and `ProxyCommand`; see the `ssh` package).
+- gvfs (Thunar `smb://` mounts) and xfconfd (Thunar's preferences) run in userland, but D-Bus
+  activation uses the host's session bus: `userland-update` installs their service files from the
+  image in `~/.local/share/dbus-1/services`.
 - `icons/` is the icon theme `Adwaita-Sidebar`: Adwaita plus colour versions of the two icons
   Thunar's side pane takes from AdwaitaLegacy (Home `go-home`, Recent `document-open-recent`,
   built from Adwaita's folder-download and clock). Its install hook sets it with gsettings (dconf
   is shared by the host and userland); the light/dark hook in the image only changes `gtk-theme`.
-- `pre_init_distrobox_assemble.sh` (runs as root on every container start) adds two repos after
-  Arch's `[core]`/`[extra]`, in priority order: `[cachyos]` (generic x86_64 only, not the `-v3`
-  repos, so the base stays Arch) and `[aur]`, prebuilt AUR packages at `http://192.168.2.50/aur` (built by `~/distro-builder/aur`).
-  A package in both (e.g. `brave-bin`) comes from `[cachyos]`. Plain `pacman -Syu` updates
-  everything, no AUR helper. `[aur]` is signed by the build server: the hook trusts
-  `distrobox/.config/distrobox/distro-builder.asc` (a copy of distro-builder's `keys/`; replace
-  both if the key changes) and sets `SigLevel = Required`, also in existing containers. The Arch image has no local pacman master key, so the hook runs
-  `pacman-key --init` before lsigning the CachyOS key.
-- The hook also removes a leftover `/var/lib/pacman/db.lck`: the first setup of `userland` takes
-  minutes (`deploy-userland` in the image starts it at any login, SSH too), and ending the session
-  or rebooting meanwhile stops the container in the middle of a pacman transaction; every later
-  start then failed with "unable to lock database" (seen on the bootc T480 rehearsal, 2026-10-08).
-- Init hooks are joined with `&&` and a failing one aborts the box setup before `assemble` exports
-  the apps and binaries (exports only happen when a box is created): `fc-cache -f || true`.
-- Package hooks that call `systemctl` fail in the boxes (no systemd as PID 1). The hook disables
-  them with a `/dev/null` link of the same name in `/etc/pacman.d/hooks`: so far openssh's
-  `10-openssh-mark-sshd-for-restart.hook` (openssh 10.6, every upgrade). Add new ones there.
 - VS Code must stay Microsoft's build (`visual-studio-code-bin` from `[aur]`): CachyOS only has
   Code-OSS (`code`) and `vscodium`, which cannot use the Dev Containers extension the `tramit-*`
   projects rely on.
