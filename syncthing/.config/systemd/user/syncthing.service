@@ -1,0 +1,28 @@
+# Syncthing from the userland box (distro-builder userland/packages.list), run by the host's
+# systemd user manager: it starts the box if it is stopped. Config, keys and database in
+# ~/.local/state/syncthing ($HOME is shared with the box); web UI on http://127.0.0.1:8384.
+# Based on the packaged syncthing.service
+[Unit]
+Description=Syncthing (userland box)
+Documentation=https://docs.syncthing.net/
+
+[Service]
+Environment="STLOGFORMATTIMESTAMP="
+Environment="STLOGFORMATLEVELSTRING=false"
+Environment="STLOGFORMATLEVELSYSLOG=true"
+ExecStart=/usr/bin/distrobox-enter --name userland -- syncthing serve --no-browser --no-restart
+# distrobox-enter offers to create a missing box ("Create it now? [Y/n]") and takes no answer as
+# yes, out of a default image: answer no (while userland-update replaces the box, or before
+# deploy-userland creates it) and try again later
+StandardInput=data
+StandardInputText=n
+# userland-update stops the box to replace it (Syncthing exits 0 or is killed): start again in the
+# new one. 3 and 4 are a restart asked from the web UI
+Restart=always
+RestartSec=5
+# Stopping the unit: conmon passes SIGTERM on to Syncthing and waits for it to shut down, while
+# podman exec itself exits 1
+SuccessExitStatus=1 3 4
+
+[Install]
+WantedBy=default.target

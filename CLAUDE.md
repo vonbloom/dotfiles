@@ -8,7 +8,8 @@ distrobox).
 
 - Each top-level directory is a stow package whose tree mirrors `$HOME`
   (e.g. `zsh/.config/zsh/.zshrc` -> `~/.config/zsh/.zshrc`).
-- Packages: `brave`, `git`, `gnupg`, `icons`, `scripts`, `ssh`, `tmux`, `vscode`, `zsh`.
+- Packages: `brave`, `git`, `gnupg`, `icons`, `scripts`, `ssh`, `syncthing`, `tmux`, `vscode`,
+  `zsh`.
 - `./install [package]` (run from the repo root, it uses `$(pwd)`) restows one package or all of
   them. It uses `--no-folding`, so stow links individual files, never whole directories. Prefer
   it over calling `stow` directly; if you do, pass `--no-folding -t ~`.
@@ -111,6 +112,21 @@ distrobox).
   (stow does not overwrite files).
 - `sshcontrol` lists both authentication subkeys. gpg-agent replaces the stow link with a plain
   file when `ssh-add` adds a key: copy it back into the package afterwards.
+
+## Syncthing
+
+- `syncthing/.config/systemd/user/syncthing.service` runs Syncthing from the userland box
+  (`distrobox-enter --name userland -- syncthing serve`) under the host's systemd user manager; the
+  install hook enables and starts it (on the host only). Config, keys (each machine its own device
+  ID) and database in `~/.local/state/syncthing`, web UI on http://127.0.0.1:8384.
+- Folders: Notes (`3gq8w-ivpc9`, `~/Documents/notes`) with roger's instance on the server (CT 112,
+  `tcp://192.168.2.34:22001`; homelab `docs/guests.md`), which keeps the versions. A star: the
+  laptops and the phone pair only with the server. The laptops dial it, so nftables opens nothing.
+- Stopping the unit stops Syncthing cleanly (conmon passes SIGTERM on and waits; podman exec itself
+  exits 1, hence `SuccessExitStatus=1`). When `userland-update` replaces the box Syncthing dies with
+  it and `Restart=always` starts it in the new one; meanwhile `StandardInputText=n` answers
+  distrobox-enter's "Create it now? [Y/n]", which an empty stdin takes as yes (a box from
+  `archlinux:latest`). Syncthing keeps userland running, so `userland-update` always asks first.
 
 ## Conventions
 

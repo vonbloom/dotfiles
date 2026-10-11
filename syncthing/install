@@ -1,0 +1,8 @@
+#!/bin/sh
+# The unit belongs to the host's systemd user manager, not to a box
+if [ -n "$CONTAINER_ID" ]; then
+	echo "In the $CONTAINER_ID box: run ./install syncthing on the host to enable Syncthing"
+	exit 0
+fi
+systemctl --user daemon-reload
+systemctl --user enable --now syncthing.service
