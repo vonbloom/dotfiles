@@ -1,0 +1,42 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Termux:Widget shortcut on the phone: today's note, as `note` does on the laptops (dotfiles
+# scripts/.local/bin/note), opened in Markor. A new YYYY-MM-DD.md starts with "# YYYY-MM-DD", an
+# existing one gets a new "## HH:MM" section (or the time of a last section left empty is updated,
+# so empty sections do not pile up). Markor cannot be handed the new lines like nvim, so they are
+# written before opening it. Installed by hand, see the dotfiles CLAUDE.md (Termux).
+
+set -euo pipefail
+
+# The phone's copy of the Syncthing folder Notes, in shared storage (termux-setup-storage): the
+# path in ~/.config/notes-dir if that file exists, else Documents/notes
+notes_dir=${NOTES_DIR:-$(cat "$HOME/.config/notes-dir" 2>/dev/null || echo "$HOME/storage/shared/Documents/notes")}
+[ -d "$notes_dir" ] || {
+	echo "No notes folder: $notes_dir (write its path to ~/.config/notes-dir)" >&2
+	exit 1
+}
+
+day=$(date +%F)
+time=$(date +%H:%M)
+# Markor resolves the path after the authority of the content URI to the file itself, which it
+# can only read as /storage/emulated/0/..., not through Termux's ~/storage/shared link
+file=$(realpath -- "$notes_dir")/$day.md
+
+if [ ! -e "$file" ]; then
+	printf '# %s\n\n## %s\n\n' "$day" "$time" >"$file"
+else
+	last=$(grep -n '[^[:space:]]' "$file" | tail -n 1 | cut -d : -f 1)
+	if [ -n "$last" ] && sed -n "${last}p" "$file" | grep -qxE '## [0-9]{2}:[0-9]{2}'; then
+		sed -i "${last}s/.*/## $time/" "$file"
+	else
+		# End the last line, then leave a blank line before the new section
+		[ -z "$(tail -c 1 "$file")" ] || echo >>"$file"
+		[ -z "$(tail -n 1 "$file")" ] || echo >>"$file"
+		printf '## %s\n\n' "$time" >>"$file"
+	fi
+fi
+
+if ! am start --user 0 -a android.intent.action.EDIT -t text/markdown \
+	-d "content://com.termux.files$file" \
+	-n net.gsantner.markor/net.gsantner.markor.activity.DocumentActivity >/dev/null 2>&1; then
+	termux-open --content-type text/markdown "$file"
+fi

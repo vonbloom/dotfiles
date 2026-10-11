@@ -82,6 +82,18 @@ distrobox).
   no arguments. `playground` is a symlink to `userland` (box taken from `$0`); aliased to `ul`
   and `pg` in `alias.bash` (shadowing util-linux `ul`/`pg` in interactive shells only). Inside
   its own box it runs the command directly; from another container it refuses.
+- `note`: notes in `~/Documents/notes` (the Syncthing folder Notes; `NOTES_DIR` overrides it).
+  `note` opens today's `YYYY-MM-DD.md` (new: `# YYYY-MM-DD`; existing: a new `## HH:MM` section),
+  `note [add] <name>` opens or starts `<name>.md` (`# <name>`), `note find` picks one with fzf,
+  `note export <name> [pdf]` makes a PDF with pandoc and typst (`pandoc-cli`, `typst` in userland;
+  on the host it reruns itself there through `userland`; `wikilinks_title_after_pipe` reads
+  Obsidian's `[[...]]` links and `![[image.png]]` embeds). With vim/nvim the new lines go into the
+  buffer through `-c` (strings quoted as Vim literals, so any note name works), so nothing is
+  written until you save: the old script `touch`ed the file first and left empty notes. Inside
+  tmux it opens a new window (`tmux new-window` with an argument list, no shell). Adopted from the
+  old Ansible dotfiles (`roles/system/files/bin/note`, 2025). Testing: point `NOTES_DIR` at a
+  scratch directory, `EDITOR` at a stand-in that runs `nvim --headless "$@" -c wq`, and unset
+  `TMUX`, or the note opens in a window of the real tmux session.
 
 ## gnupg
 
@@ -127,6 +139,24 @@ distrobox).
   it and `Restart=always` starts it in the new one; meanwhile `StandardInputText=n` answers
   distrobox-enter's "Create it now? [Y/n]", which an empty stdin takes as yes (a box from
   `archlinux:latest`). Syncthing keeps userland running, so `userland-update` always asks first.
+
+## Termux (phone)
+
+- `termux/` is not a stow package (`install` skips it, `NOT_PACKAGES`): Termux:Widget only runs
+  scripts whose real path is in `~/.shortcuts`, so a stow link would not work. Copy them on the
+  phone (Termux and Termux:Widget from the same source, F-Droid; `termux-setup-storage` once):
+  `mkdir -p ~/.shortcuts/tasks && curl -fsSL "https://raw.githubusercontent.com/vonbloom/dotfiles/main/termux/shortcuts/Nota%20del%20dia" -o ~/.shortcuts/tasks/"Nota del dia" && chmod 700 ~/.shortcuts/tasks/"Nota del dia"`.
+  `tasks/` runs without a terminal; starting Markor from the background needs Termux's "Display
+  over other apps" permission (or put it in `~/.shortcuts` itself: a terminal flashes). The notes
+  folder is `~/storage/shared/Documents/notes` unless `~/.config/notes-dir` holds another path
+  (find it with `find ~/storage/shared -maxdepth 5 -name .stfolder`).
+- `Nota del dia`: today's note like `note`, then Markor. Markor (2.16.1) cannot get a file by path
+  in an intent (the `markor://open?path=` deep link is only in master since 2026-08), but it
+  resolves `content://<any authority>/storage/...` to the file itself and edits it in place: the
+  script sends `content://com.termux.files<real path>` to `DocumentActivity`, falling back to
+  `termux-open`. The path must be the real `/storage/emulated/0/...` (`realpath`), not
+  `~/storage/shared/...`. The lines are written before opening (Markor takes no buffer), so a
+  last `## HH:MM` with nothing under it gets its time updated instead of a new one.
 
 ## Conventions
 

@@ -33,7 +33,14 @@ stow_target() {
 	fi
 }
 
+# Not stow packages: files for other devices, copied by hand (see CLAUDE.md)
+NOT_PACKAGES=(termux)
+
 if [[ -n $PKG ]]; then
+	if [[ " ${NOT_PACKAGES[*]} " == *" $PKG "* ]]; then
+		echo "$PKG is not a stow package: see CLAUDE.md" >&2
+		exit 1
+	fi
 	echo "Installing $PKG dotfiles"
 	stow_target "$PKG"
 	exit 0
@@ -45,6 +52,7 @@ for dir in ./*/; do
 
     # Ignore dot folders
     [[ "$package" == .* ]] && continue
+    [[ " ${NOT_PACKAGES[*]} " == *" $package "* ]] && continue
 
     echo "Stowing $package package"
     stow_target "$package"

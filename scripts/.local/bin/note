@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# Notes in ~/Documents/notes, the Syncthing folder Notes (NOTES_DIR overrides it).
+#
+#   note                      today's note, YYYY-MM-DD.md: a new one starts with "# YYYY-MM-DD",
+#                             an existing one gets a new "## HH:MM" section at the end
+#   note [add] <name>         <name>.md, opened as it is or started with "# <name>"
+#                             ("add" names a note like one of these commands)
+#   note find                 pick a note with fzf, newest first, and open it
+#   note export <name> [pdf]  PDF with pandoc and typst, ./<name>.pdf by default
+#
+# With vim or nvim the new lines go into the editor's buffer, so the file is only written when
+# you save: quitting with :q! leaves no empty note behind. Inside tmux the note opens in a new
+# window. pandoc and typst come from the userland box: on the host, export runs there.
+
+set -euo pipefail
+
+notes_dir=${NOTES_DIR:-$HOME/Documents/notes}
+args=("$@")
+
+usage() {
+	local out=2
+	[ "${1:-1}" -eq 0 ] && out=1
+	sed -n '2,/^$/s/^# \{0,1\}//p' "$0" >&"$out"
+	exit "${1:-1}"
+}
+
+die() {
+	echo "note: $*" >&2
+	exit 1
+}
+
+# Vim script string literal: single quotes, with each quote doubled
+vim_str() {
+	printf "'%s'" "${1//\'/\'\'}"
+}
+
+# Run this script in the userland box when the host lacks a tool ($HOME is shared)
+need() {
+	command -v "$1" >/dev/null && return
+	if [ -z "${CONTAINER_ID:-}" ] && command -v userland >/dev/null; then
+		exec userland "$0" "${args[@]}"
+	fi
+	die "$1 is not installed"
+}
+
+# open_note <file> [line...]: open the file in the editor, adding the lines at its end (the whole
+# buffer for a new file) with the cursor after them in insert mode
+open_note() {
+	local file=$1 editor list='' line
+	shift
+	editor=$(command -v "${EDITOR:-nvim}") || die "editor not found: ${EDITOR:-nvim}"
+	local cmd=("$editor")
+	if [ $# -gt 0 ]; then
+		case ${editor##*/} in
+		vim | nvim)
+			for line; do
+				list+="${list:+, }$(vim_str "$line")"
+			done
+			cmd+=(-c "let g:note_lines = [$list] | if line('\$') == 1 && getline(1) ==# '' | call setline(1, g:note_lines) | else | call append('\$', g:note_lines) | endif"
+				-c 'normal! G' -c 'startinsert!')
+			;;
+		*)
+			printf '%s\n' "$@" >>"$file"
+			;;
+		esac
+	fi
+	cmd+=("$file")
+	if [ -n "${TMUX:-}" ] && command -v tmux >/dev/null; then
+		exec tmux new-window -n "$(basename "$file" .md)" "${cmd[@]}"
+	fi
+	exec "${cmd[@]}"
+}
+
+today() {
+	local day time file
+	day=$(date +%F)
+	time=$(date +%H:%M)
+	file=$notes_dir/$day.md
+	if [ ! -e "$file" ]; then
+		open_note "$file" "# $day" '' "## $time" ''
+	elif [ -n "$(tail -n 1 "$file")" ]; then
+		open_note "$file" '' "## $time" ''
+	else
+		open_note "$file" "## $time" ''
+	fi
+}
+
+named() {
+	local name=${1%.md} file
+	[ -n "$name" ] || usage
+	file=$notes_dir/$name.md
+	if [ -e "$file" ]; then
+		open_note "$file"
+	fi
+	mkdir -p "$(dirname "$file")"
+	open_note "$file" "# ${name##*/}" ''
+}
+
+find_note() {
+	local file
+	need fzf
+	file=$(cd "$notes_dir" &&
+		find . -name '*.md' -not -path './.*' -printf '%T@\t%P\n' | sort -rn | cut -f 2- |
+		fzf --prompt='note> ' --preview='cat -- {}' --preview-window=right,60%) || exit 0
+	open_note "$notes_dir/$file"
+}
+
+export_note() {
+	local name=${1%.md} out file
+	file=$notes_dir/$name.md
+	out=${2:-./${name##*/}.pdf}
+	[ -f "$file" ] || die "no such note: $file"
+	need pandoc
+	need typst
+	# wikilinks: Obsidian's [[note]] links and ![[image.png]] embeds
+	pandoc "$file" -f markdown+wikilinks_title_after_pipe --pdf-engine=typst \
+		--resource-path="$notes_dir" -M lang=ca -o "$out"
+	echo "$out"
+}
+
+[ -d "$notes_dir" ] || die "no notes directory: $notes_dir"
+
+case ${1:-} in
+'') today ;;
+-h | --help) usage 0 ;;
+find)
+	[ $# -eq 1 ] || usage
+	find_note
+	;;
+export)
+	[ $# -eq 2 ] || [ $# -eq 3 ] || usage
+	export_note "$2" "${3:-}"
+	;;
+add)
+	[ $# -eq 2 ] || usage
+	named "$2"
+	;;
+-*) usage ;;
+*)
+	[ $# -eq 1 ] || usage
+	named "$1"
+	;;
+esac
