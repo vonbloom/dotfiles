@@ -147,7 +147,15 @@ distrobox).
   phone (Termux and Termux:Widget from the same source, F-Droid; `termux-setup-storage` once):
   `mkdir -p ~/.shortcuts/tasks && curl -fsSL "https://raw.githubusercontent.com/vonbloom/dotfiles/main/termux/shortcuts/Nota%20del%20dia" -o ~/.shortcuts/tasks/"Nota del dia" && chmod 700 ~/.shortcuts/tasks/"Nota del dia"`.
   `tasks/` runs without a terminal; starting Markor from the background needs Termux's "Display
-  over other apps" permission (or put it in `~/.shortcuts` itself: a terminal flashes). The notes
+  over other apps" permission, and on the Xiaomi also "Display pop-up windows while running in the
+  background" (without it the note was written but Markor did not open, 2026-10-12); or put it in
+  `~/.shortcuts` itself: a terminal flashes. The Xiaomi launcher has no 1x1 "Termux shortcut" in
+  its widget picker, only the list widget. Dynamic shortcuts work too ("Create shortcuts" in the
+  Termux:Widget app, then a long press of its icon; not at once, 2026-10-12, and launcher search
+  does not find them). Their label is the path under `~/.termux/widget/dynamic_shortcuts`
+  ("tasks/Nota del dia"), but the `tasks/` check uses the real path, so the phone has a symlink
+  `dynamic_shortcuts/Nota del dia` -> `~/.shortcuts/tasks/Nota del dia`: labelled "Nota del dia",
+  run in the background, one copy to update (termux-widget `ShortcutFile`, `TermuxWidgetProvider`). The notes
   folder is `~/storage/shared/Documents/notes` unless `~/.config/notes-dir` holds another path
   (find it with `find ~/storage/shared -maxdepth 5 -name .stfolder`).
 - `Nota del dia`: today's note like `note`, then Markor. Markor (2.16.1) cannot get a file by path
