@@ -74,7 +74,7 @@ distrobox).
 - The completion dump is per environment: `$XDG_CACHE_HOME/zsh/zcompdump-${CONTAINER_ID:-host}`.
 - History lives in `$XDG_CACHE_HOME/zsh/history` (the dir is created by `zsh/install`).
 
-## Scripts (`scripts/.local/bin`)
+## Scripts (`scripts/.local/bin`, `scripts/.local/share/applications`)
 
 - `arkdep-diff`: package diff between the running deployment and the previous one (run after
   rebooting into a new deployment).
@@ -82,6 +82,12 @@ distrobox).
   no arguments. `playground` is a symlink to `userland` (box taken from `$0`); aliased to `ul`
   and `pg` in `alias.bash` (shadowing util-linux `ul`/`pg` in interactive shells only). Inside
   its own box it runs the command directly; from another container it refuses.
+- `vm-console [vmid]`: the SPICE console of a VM on zeus (default 206, the Windows VM; homelab
+  `docs/guests.md`) in `remote-viewer` (userland), starting the VM if it is stopped. The ticket
+  comes from `pvesh create /nodes/zeus/qemu/<vmid>/spiceproxy` over root SSH and lasts seconds,
+  so the `.vv` is written to `~/.cache` and opened at once (remote-viewer deletes it). Errors also
+  go to `notify-send`. `scripts/.local/share/applications/vm-console-windows.desktop` puts it in
+  the launcher as "Windows" (absolute `Exec`: the sway session's PATH lacks `~/.local/bin`).
 - `note`: notes in `~/Documents/notes` (the Syncthing folder Notes; `NOTES_DIR` overrides it).
   `note` opens today's `YYYY-MM-DD.md` (new: `# YYYY-MM-DD`; existing: a new `## HH:MM` section),
   `note [add] <name>` opens or starts `<name>.md` (`# <name>`), `note find` picks one with fzf,

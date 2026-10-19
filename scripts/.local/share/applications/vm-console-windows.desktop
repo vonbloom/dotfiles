@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Windows
+Comment=Console of the Windows VM on zeus (VM 206), started if it is stopped
+Exec=/home/roger/.local/bin/vm-console 206
+Icon=computer
+Terminal=false
+Categories=Network;RemoteAccess;

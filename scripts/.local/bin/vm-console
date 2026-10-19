@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# The console of a VM on zeus in remote-viewer, over SPICE:
+#
+#   vm-console [vmid]         default 206, the Windows VM
+#
+# Starts the VM first if it is stopped. The ticket comes from the Proxmox API over root SSH
+# (pvesh spiceproxy) and is valid for a few seconds only, so it is used at once; remote-viewer
+# deletes the .vv file once read (delete-this-file). remote-viewer comes from the userland box.
+# Errors also go to a notification: the "Windows" launcher entry has no terminal.
+
+set -euo pipefail
+
+vmid=${1:-206}
+pve=root@192.168.2.10
+node=zeus
+PATH=$HOME/.local/bin:$PATH
+
+die() {
+	echo "vm-console: $*" >&2
+	notify-send -a vm-console "VM $vmid" "$*" 2>/dev/null || true
+	exit 1
+}
+
+[[ $vmid =~ ^[0-9]+$ ]] || die "not a VM ID: $vmid"
+
+# The VM ID and the node go into the remote command on purpose
+# shellcheck disable=SC2029
+status=$(ssh "$pve" qm status "$vmid") || die "no answer from $pve about VM $vmid"
+if [ "$status" != "status: running" ]; then
+	# shellcheck disable=SC2029
+	ssh "$pve" qm start "$vmid" || die "qm start $vmid failed"
+fi
+
+vv=$(mktemp --suffix=.vv -p "$HOME/.cache" vm-console.XXXXXX)
+# shellcheck disable=SC2029
+if ! ssh "$pve" "pvesh create /nodes/$node/qemu/$vmid/spiceproxy --proxy ${pve#*@} --output-format json" |
+	python3 -c 'import json, sys; print("[virt-viewer]"); [print(f"{k}={v}") for k, v in json.load(sys.stdin).items()]' >"$vv"; then
+	rm -f "$vv"
+	die "no SPICE ticket for VM $vmid"
+fi
+exec remote-viewer "$vv"
