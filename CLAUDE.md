@@ -88,7 +88,7 @@ distrobox).
   so the `.vv` is written to `~/.cache` and opened at once (remote-viewer deletes it). Errors also
   go to `notify-send`. `scripts/.local/share/applications/vm-console-windows.desktop` puts it in
   the launcher as "Windows" (absolute `Exec`: the sway session's PATH lacks `~/.local/bin`).
-- `note`: notes in `~/Documents/notes` (the Syncthing folder Notes; `NOTES_DIR` overrides it).
+- `note`: notes in `~/Notes` (the Syncthing folder Notes; `NOTES_DIR` overrides it).
   `note` opens today's `YYYY-MM-DD.md` (new: `# YYYY-MM-DD`; existing: a new `## HH:MM` section),
   `note [add] <name>` opens or starts `<name>.md` (`# <name>`), `note find` picks one with fzf,
   `note export <name> [pdf]` makes a PDF with pandoc and typst (`pandoc-cli`, `typst` in userland;
@@ -137,9 +137,12 @@ distrobox).
   (`distrobox-enter --name userland -- syncthing serve`) under the host's systemd user manager; the
   install hook enables and starts it (on the host only). Config, keys (each machine its own device
   ID) and database in `~/.local/state/syncthing`, web UI on http://127.0.0.1:8384.
-- Folders: Notes (`3gq8w-ivpc9`, `~/Documents/notes`) with roger's instance on the server (CT 112,
-  `tcp://192.168.2.34:22001`; homelab `docs/guests.md`), which keeps the versions. A star: the
-  laptops and the phone pair only with the server. The laptops dial it, so nftables opens nothing.
+- Folders: Notes (`3gq8w-ivpc9`, `~/Notes`; the phone keeps `Documents/notes`) with roger's
+  instance on the server (CT 112, `tcp://192.168.2.34:22001`; homelab `docs/guests.md`), which
+  keeps the versions. A star: the laptops and the phone pair only with the server. The laptops
+  dial it, so nftables opens nothing. Notes is outside `~/Documents` (until 2026-10-20 in
+  `~/Documents/notes`) so that Documents can be a folder of its own without the phone: a folder
+  inside another synced folder would be synced by both.
 - Stopping the unit stops Syncthing cleanly (conmon passes SIGTERM on and waits; podman exec itself
   exits 1, hence `SuccessExitStatus=1`). When `userland-update` replaces the box Syncthing dies with
   it and `Restart=always` starts it in the new one; meanwhile `StandardInputText=n` answers

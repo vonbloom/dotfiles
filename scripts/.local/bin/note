@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Notes in ~/Documents/notes, the Syncthing folder Notes (NOTES_DIR overrides it).
+# Notes in ~/Notes, the Syncthing folder Notes (NOTES_DIR overrides it).
 #
 #   note                      today's note, YYYY-MM-DD.md: a new one starts with "# YYYY-MM-DD",
 #                             an existing one gets a new "## HH:MM" section at the end
@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-notes_dir=${NOTES_DIR:-$HOME/Documents/notes}
+notes_dir=${NOTES_DIR:-$HOME/Notes}
 args=("$@")
 
 usage() {
