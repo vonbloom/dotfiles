@@ -29,7 +29,7 @@ distrobox).
   wrapper of the same name (e.g. `pacman`); the distrobox-exported wrappers handle this with
   `$CONTAINER_ID` checks.
 - The boxes (`userland`, `playground`) are not defined here any more: they come from the userland
-  image that `~/distro-builder/userland` builds (packages, exports, box manifest; see its README),
+  image that `~/Projectes/distro-builder/userland` builds (packages, exports, box manifest; see its README),
   created and replaced by `userland-update` in the host image. Until 2026-10-09 this repo had a
   `distrobox` package (`default.ini`, a pre-init hook adding the `[cachyos]` and `[aur]` repos, the
   D-Bus services): the boxes were assembled from `archlinux:latest` and upgraded in place.
@@ -37,7 +37,7 @@ distrobox).
   `userland-update` (`--playground` moves it to userland's image and reinstalls what was added).
   Once a package is worth keeping, add it to distro-builder's `userland/packages.list` (and to the
   exports in `userland/distrobox.ini` if the host must see it). Host software goes in
-  `~/distro-builder/image` instead.
+  `~/Projectes/distro-builder/image` instead.
 - `distrobox-host-exec` does not work here (host-spawn needs flatpak, which the host lacks). Never
   run podman in local mode inside a container (e.g. `--remote=false` or the host binary from
   `/run/host`): it deletes the host's rootless `pause.pid` (the image makes `podman` the remote
@@ -59,7 +59,7 @@ distrobox).
 
 - `ZDOTDIR=$HOME/.config/zsh` is set in `/etc/zsh/zshenv` and the `XDG_*` variables in
   `/etc/profile.d/xdg-vars.sh`; both come from the host image
-  (`~/distro-builder/image/arkdep-build.d/depends/generic/overlay/post_install/etc/`), not from this
+  (`~/Projectes/distro-builder/image/arkdep-build.d/depends/generic/overlay/post_install/etc/`), not from this
   repo. The container inherits them from the host environment.
 - `.zshrc` sources `utils.zsh`, `history.zsh`, `prompt.zsh`, `alias.bash` (in bash emulation),
   then `compinit` and `plugins.zsh`. It does not start tmux: only the sway binding `Win+Enter`
