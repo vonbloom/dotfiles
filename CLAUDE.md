@@ -137,12 +137,21 @@ distrobox).
   (`distrobox-enter --name userland -- syncthing serve`) under the host's systemd user manager; the
   install hook enables and starts it (on the host only). Config, keys (each machine its own device
   ID) and database in `~/.local/state/syncthing`, web UI on http://127.0.0.1:8384.
-- Folders: Notes (`3gq8w-ivpc9`, `~/Notes`; the phone keeps `Documents/notes`) with roger's
-  instance on the server (CT 112, `tcp://192.168.2.34:22001`; homelab `docs/guests.md`), which
-  keeps the versions. A star: the laptops and the phone pair only with the server. The laptops
-  dial it, so nftables opens nothing. Notes is outside `~/Documents` (until 2026-10-20 in
-  `~/Documents/notes`) so that Documents can be a folder of its own without the phone: a folder
-  inside another synced folder would be synced by both.
+- Folders: Notes (`3gq8w-ivpc9`, `~/Notes`; the phone keeps `Documents/notes`), Documents
+  (`roger-documents`, `~/Documents`) and Imatges (`roger-imatges`, `~/Imatges`), the last two
+  with the laptops only, all with roger's instance on the server (CT 112,
+  `tcp://192.168.2.34:22001`; homelab `docs/guests.md`), which keeps the versions. A star: the
+  laptops and the phone pair only with the server. The laptops dial it, so nftables opens
+  nothing. Notes is outside `~/Documents` (until 2026-10-20 in `~/Documents/notes`) so that
+  Documents can be a folder of its own without the phone: a folder inside another synced folder
+  would be synced by both.
+- What goes where in the home: git repositories in `~/Projectes` (synced by git), files to keep in
+  `~/Documents` and `~/Imatges` (Syncthing), `~/Baixades` neither synced nor backed up. A new
+  laptop that already has files in a folder merges them with the others' on its first sync: files
+  that exist on one side only are copied, a path with different contents keeps the newer one and
+  a `.sync-conflict-*` copy of the other, deletions are not carried over. Compare the copies first
+  (2026-10-20: sha256 manifests of every copy, the one conflict resolved by hand, code moved out of
+  Documents).
 - Stopping the unit stops Syncthing cleanly (conmon passes SIGTERM on and waits; podman exec itself
   exits 1, hence `SuccessExitStatus=1`). When `userland-update` replaces the box Syncthing dies with
   it and `Restart=always` starts it in the new one; meanwhile `StandardInputText=n` answers
