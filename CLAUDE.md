@@ -9,6 +9,9 @@ speaks Catalan; code, comments and commit messages are in English.
 
 - Usage goes in `README.md` (and `gnupg/README.md`); this file keeps the implementation notes and
   the pitfalls already hit. A fact lives in one of them.
+- Before giving the user a change, check it against that: a change of usage reaches the README
+  and the script's own header or usage text; a pitfall found on the way goes here; nothing is
+  written in both; no infrastructure details (below).
 - This repository is public: document only the configuration itself (what it does, how and why),
   in files, comments and commit messages. Infrastructure details stay out: addresses, servers and
   their jobs, VM and container IDs, Syncthing device and folder IDs, backup locations, work
