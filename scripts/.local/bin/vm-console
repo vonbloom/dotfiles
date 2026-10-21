@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The console of a VM on zeus in remote-viewer, over SPICE:
+# The console of a Proxmox VM in remote-viewer, over SPICE:
 #
 #   vm-console [vmid]         default 206, the Windows VM
 #

@@ -2,7 +2,7 @@
 # Add one of the GnuPG authentication subkeys to ~/.ssh/authorized_keys on a remote host, or
 # remove it with -u. Matches whole lines, so it is idempotent.
 # Usage: install-ssh-key [-u] [-w] user@host
-#   -w  the work subkey (roger@apptramit.com) instead of the personal one (vonbloom@gmail.com)
+#   -w  the work subkey instead of the personal one
 
 set -euo pipefail
 

@@ -6,13 +6,12 @@ authentication subkeys offered to SSH) and three scripts in `~/.local/bin`.
 ## Keys
 
 One primary key, `C785 B084 B567 7B84 91FE  E41D 7E0E B22A 2520 16A3` (ed25519, certify and
-sign), with two user IDs (personal `vonbloom@gmail.com`, work `roger@apptramit.com`) and these
-subkeys:
+sign), with two user IDs (personal and work) and these subkeys:
 
 | Subkey | Use | Keygrip (`sshcontrol`) | SSH comment | Where it goes |
 |---|---|---|---|---|
-| `6DE3D0D2F4CD2BA7` (cv25519) | encryption | | | decrypts the homelab vault password (`.vault-pass.gpg`) |
-| `DD8A445D5646ACB4` (ed25519) | SSH, personal | `9D705C5D…D5906F93` | `openpgp:0x5646ACB4` | homelab servers (`admin_ssh_keys`), `install-ssh-key` |
+| `6DE3D0D2F4CD2BA7` (cv25519) | encryption | | | decrypts the homelab vault password |
+| `DD8A445D5646ACB4` (ed25519) | SSH, personal | `9D705C5D…D5906F93` | `openpgp:0x5646ACB4` | the home servers, `install-ssh-key` |
 | `79687A6997265102` (ed25519) | SSH, work | `AD4D1059…D1E18F10` | `openpgp:0x97265102` | work servers, `install-ssh-key -w` |
 
 This key is the root of everything else: through the vault it also protects the distro-builder
@@ -42,8 +41,8 @@ and reloads the agent. SSH then works with the subkeys in `sshcontrol`.
 
 ## Install or remove the SSH key on a server
 ```bash
-install-ssh-key user@host      # adds the personal subkey (vonbloom@gmail.com) to ~/.ssh/authorized_keys
-install-ssh-key -w user@host   # the work subkey (roger@apptramit.com) instead
+install-ssh-key user@host      # adds the personal subkey to ~/.ssh/authorized_keys
+install-ssh-key -w user@host   # the work subkey instead
 install-ssh-key -u user@host   # removes it (-u -w: the work one)
 ```
 Idempotent: whole lines are compared, the key goes to the remote shell on stdin.
@@ -74,10 +73,9 @@ certificate). Keep two copies off the laptop.
    cp ~/gnupg-backup-*.tar.gz /run/media/roger/<label>/
    udisksctl unmount -b /dev/sda1
    ```
-4. Copy it to the file server (zeus HDD pool):
+4. Copy it to the file server (where: homelab `docs/storage.md`, Backups):
    ```bash
-   ssh root@192.168.2.10 'mkdir -p -m 700 /mnt/pool/backup/gnupg'
-   scp ~/gnupg-backup-*.tar.gz root@192.168.2.10:/mnt/pool/backup/gnupg/
+   scp ~/gnupg-backup-*.tar.gz <file server>:<backup directory>/
    ```
 5. Remove the local copy: `rm ~/gnupg-backup-*.tar.gz`.
 

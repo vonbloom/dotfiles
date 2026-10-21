@@ -3,7 +3,7 @@
 # scripts/.local/bin/note), opened in Markor. A new YYYY-MM-DD.md starts with "# YYYY-MM-DD", an
 # existing one gets a new "## HH:MM" section (or the time of a last section left empty is updated,
 # so empty sections do not pile up). Markor cannot be handed the new lines like nvim, so they are
-# written before opening it. Installed by hand, see the dotfiles CLAUDE.md (Termux).
+# written before opening it. Installed by hand, see the dotfiles README.md (Termux).
 
 set -euo pipefail
 

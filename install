@@ -33,12 +33,12 @@ stow_target() {
 	fi
 }
 
-# Not stow packages: files for other devices, copied by hand (see CLAUDE.md)
+# Not stow packages: files for other devices, copied by hand (see README.md)
 NOT_PACKAGES=(termux)
 
 if [[ -n $PKG ]]; then
 	if [[ " ${NOT_PACKAGES[*]} " == *" $PKG "* ]]; then
-		echo "$PKG is not a stow package: see CLAUDE.md" >&2
+		echo "$PKG is not a stow package: see README.md" >&2
 		exit 1
 	fi
 	echo "Installing $PKG dotfiles"
