@@ -42,9 +42,10 @@ speaks Catalan; code, comments and commit messages are in English.
   client).
 - distrobox sets `SHELL` to the shell's name without a path (`zsh`) in its boxes: tools that need
   an absolute `$SHELL` fail there (ssh's `Match exec` and `ProxyCommand`; see the `ssh` package).
-- gvfs (Thunar `smb://` mounts) and xfconfd (Thunar's preferences) run in userland, but D-Bus
-  activation uses the host's session bus: `userland-update` installs their service files from the
-  image in `~/.local/share/dbus-1/services`.
+- xfconfd (Thunar's preferences) runs in userland, but D-Bus activation uses the host's session
+  bus: `userland-update` installs its service file from the image in
+  `~/.local/share/dbus-1/services`. gvfs (Thunar's `smb://` mounts) is the host images' since
+  2026-10-21: Thunar's GIO talks to the host's daemon.
 - `icons/`: the two colour icons (Home `go-home`, Recent `document-open-recent`) replace the ones
   Thunar's side pane takes from AdwaitaLegacy, built from Adwaita's folder-download and clock. The
   install hook sets the theme with gsettings (dconf is shared by the host and userland); the
