@@ -20,6 +20,7 @@ speaks Catalan; code, comments and commit messages are in English.
 - Shell scripts: `#!/usr/bin/env bash` (or `/bin/sh` when POSIX is enough), tab indentation.
 - Commits: short imperative English sentence, no prefix (e.g. "Add vscode package"), GPG-signed
   (`commit.gpgsign = true` in `git/.config/git/config`).
+- Never add anything agent-related (Copilot, Claude, etc.) to commit messages or as a co-author.
 
 ## Host vs container
 
