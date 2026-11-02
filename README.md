@@ -28,7 +28,7 @@ cd ~/.dotfiles
 
 | Package | What it holds |
 |---|---|
-| `brave` | `brave-flags.conf`, `brave-origin-flags.conf`: the passwords in the host's Secret Service (below) |
+| `brave` | `brave-origin-flags.conf`: the passwords in the host's Secret Service (below) |
 | `git` | the user and GPG-signed commits |
 | `gnupg` | GnuPG and gpg-agent (also the SSH agent), `gpg-backup`, `gpg-restore`, `install-ssh-key`: [gnupg/README.md](gnupg/README.md) |
 | `icons` | the icon theme `Adwaita-Sidebar`: Adwaita plus colour Home and Recent icons in Thunar's side pane, set by its hook |
@@ -104,6 +104,6 @@ mkdir -p ~/.shortcuts/tasks && curl -fsSL "https://raw.githubusercontent.com/von
 ## Secret Service
 
 Brave and VS Code (userland box) keep their secrets in the host's gnome-keyring, unlocked at the
-login. On sway they do not detect it, so `brave-flags.conf`, `brave-origin-flags.conf` and the
-`vscode` hook (in `~/.vscode/argv.json`) set `--password-store=gnome-libsecret`. Brave still reads
-what it stored with its "basic" store before; VS Code may ask to sign in again.
+login. On sway they do not detect it, so `brave-origin-flags.conf` and the `vscode` hook (in
+`~/.vscode/argv.json`) set `--password-store=gnome-libsecret`. Brave still reads what it stored
+with its "basic" store before; VS Code may ask to sign in again.

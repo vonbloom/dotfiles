@@ -63,6 +63,10 @@ speaks Catalan; code, comments and commit messages are in English.
 - `.zshrc` sources `utils.zsh`, `history.zsh`, `prompt.zsh`, `alias.bash` (in bash emulation),
   then `compinit` and `plugins.zsh`. tmux comes from the sway binding in the image
   (`foot tmux new-session -A -s main`), never from `.zshrc`.
+- `.zprofile` exports no `BROWSER`: with it, `xdg-settings` takes the first desktop file that runs
+  that binary, so with one launcher per browser profile it reports another profile's and "not
+  default", and a program that runs the binary directly gets the last active profile. Without it
+  they use `xdg-open` and the `x-scheme-handler` launcher.
 - The plugins are handled by the autoloaded functions in `zsh/.local/share/zsh/functions`
   (`install-`, `source-`, `update-zsh-plugins`). Order matters: `compinit`, then `fzf --zsh` (it
   binds Tab to its own completion), then the plugins, so that fzf-tab takes Tab back and
