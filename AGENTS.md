@@ -55,6 +55,14 @@ speaks Catalan; code, comments and commit messages are in English.
   Code-OSS (`code`) and `vscodium`, which cannot use the Dev Containers extension the work
   projects rely on.
 
+## fastfetch
+
+- `packages` counts the directories of pacman's `local` database, as fastfetch does. The bootc
+  images have it in `/usr/lib/sysimage/lib/pacman` (`bootc/Containerfile` in distro-builder), not
+  in `/var`.
+- The `command` module can only be set in the JSON config: `fastfetch -s command` refuses it. To
+  try a config: `fastfetch --config <file> --logo none --pipe true`.
+
 ## zsh
 
 - `ZDOTDIR=$HOME/.config/zsh` is set in `/etc/zsh/zshenv` and the `XDG_*` variables in
