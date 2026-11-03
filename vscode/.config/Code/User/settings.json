@@ -17,5 +17,6 @@
     "security.workspace.trust.untrustedFiles": "open",
     "aws.cloudformation.telemetry.enabled": false,
     "claudeCode.hideOnboarding": true,
-    "window.menuBarVisibility": "compact"
+    "window.menuBarVisibility": "compact",
+    "window.dialogStyle": "custom"
 }
