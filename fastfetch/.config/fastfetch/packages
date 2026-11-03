@@ -1,17 +1,10 @@
 #!/bin/sh
-# Prints the package counts of the host and of a box for fastfetch's Packages line: fastfetch's own
-# module only sees the system it runs in. $HOME is shared, so this runs in both places.
-count() {
-	find "$1" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l
-}
+# Prints the package counts of the host and of userland for fastfetch's Packages line: fastfetch's
+# own module only sees the system it runs in.
 db=/var/lib/pacman/local
-root=${CONTAINER_ID:+/run/host}
 # arkdep images keep the host's database in /var, bootc images in /usr/lib/sysimage
-host=$root$db
-[ -d "$host" ] || host=$root/usr/lib/sysimage/lib/pacman/local
-if [ -n "${CONTAINER_ID}" ]; then
-	echo "$(count "$host") (host), $(count "$db") ($CONTAINER_ID)"
-else
-	box=$(podman exec userland sh -c "find $db -mindepth 1 -maxdepth 1 -type d | wc -l" 2>/dev/null)
-	echo "$(count "$host") (host)${box:+, $box (userland)}"
-fi
+host=$db
+[ -d "$host" ] || host=/usr/lib/sysimage/lib/pacman/local
+count="find $db -mindepth 1 -maxdepth 1 -type d | wc -l"
+box=$(podman exec userland sh -c "$count" 2>/dev/null)
+echo "$(find "$host" -mindepth 1 -maxdepth 1 -type d | wc -l) (host)${box:+, $box (userland)}"

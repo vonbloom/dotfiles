@@ -29,7 +29,7 @@ cd ~/.dotfiles
 | Package | What it holds |
 |---|---|
 | `brave` | `brave-origin-flags.conf`: the passwords in the host's Secret Service (below) |
-| `fastfetch` | the default modules, with a Packages line that counts the host and a box (`userland`, or the box it runs in), and the disks without a bootc image's read-only root |
+| `fastfetch` | the default modules, with a Packages line that counts the host and `userland`, and the disks without a bootc image's read-only root |
 | `git` | the user and GPG-signed commits |
 | `gnupg` | GnuPG and gpg-agent (also the SSH agent), `gpg-backup`, `gpg-restore`, `install-ssh-key`: [gnupg/README.md](gnupg/README.md) |
 | `icons` | the icon theme `Adwaita-Sidebar`: Adwaita plus colour Home and Recent icons in Thunar's side pane, set by its hook |

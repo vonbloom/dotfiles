@@ -62,8 +62,8 @@ speaks Catalan; code, comments and commit messages are in English.
   in `/var`.
 - The `command` module can only be set in the JSON config: `fastfetch -s command` refuses it. To
   try a config: `fastfetch --config <file> --logo none --pipe true`.
-- It comes from the host images, not exported from `userland`: through the wrapper (`podman exec`)
-  `shell` shows `conmon`, its parent process, `disk` the box's mounts (`/` as `overlay`,
+- It comes from the host images, and `userland` does not have it: exported from a box (`podman
+  exec`), `shell` shows `conmon`, its parent process, `disk` the box's mounts (`/` as `overlay`,
   `/etc/hostname`, `/run/host/boot`), `os` lacks the image's date and `wm` Sway's version.
 - `hideFS` `overlay` is for the bootc images: their `/` is composefs, 20 MiB and always at 100 %,
   and the real disks are `/sysroot` and `/var/home`. arkdep's `/` is btrfs and stays.
