@@ -94,7 +94,7 @@ speaks Catalan; code, comments and commit messages are in English.
 - `note`: with vim/nvim the new lines go into the buffer through `-c` (strings quoted as Vim
   literals, so any note name works): the old script `touch`ed the file first and left empty notes.
   Inside tmux it runs `tmux new-window` with an argument list, no shell. On the host, `export`
-  reruns itself in userland (`pandoc-cli`, `typst`); `wikilinks_title_after_pipe` reads Obsidian's
+  reruns itself in userland (`pandoc-bin`, `typst`); `wikilinks_title_after_pipe` reads Obsidian's
   links. Adopted from the old Ansible dotfiles (`roles/system/files/bin/note`, 2025). Testing:
   point `NOTES_DIR` at a scratch directory, `EDITOR` at a stand-in that runs
   `nvim --headless "$@" -c wq`, and unset `TMUX`, or the note opens in a window of the real tmux
