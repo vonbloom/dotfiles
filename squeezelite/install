@@ -1,0 +1,18 @@
+#!/bin/sh
+# The unit belongs to the host's systemd user manager, not to a box. It is enabled only once the
+# userland box has squeezelite: before, it would fail and restart every 5 s
+if [ -n "$CONTAINER_ID" ]; then
+	echo "In the $CONTAINER_ID box: run ./install squeezelite on the host to enable squeezelite"
+	exit 0
+fi
+systemctl --user daemon-reload
+# "n": distrobox-enter would create a missing box from a default image (an empty answer is yes)
+if ! echo n | distrobox-enter --name userland -- sh -c 'command -v squeezelite' >/dev/null 2>&1; then
+	echo "The userland box has no squeezelite: run userland-update, then ./install squeezelite again"
+	exit 0
+fi
+if ! grep -qs '^SERVER=' "${XDG_CONFIG_HOME:-$HOME/.config}/squeezelite.conf"; then
+	echo "No SERVER=<address> in ~/.config/squeezelite.conf: squeezelite will look for the server" \
+		"on the LAN, and the firewall drops the answer"
+fi
+systemctl --user enable --now squeezelite.service

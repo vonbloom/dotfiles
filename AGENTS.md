@@ -146,6 +146,23 @@ speaks Catalan; code, comments and commit messages are in English.
   started (the first one after boot) stopped with every restart of Syncthing. Only the box: the
   exec of `ExecStart` keeps the variable, its conmon in the unit is what passes the stop on.
 
+## Squeezelite
+
+- The unit is syncthing's pattern: `distrobox-enter` from the host's user manager, the box
+  started first without `INVOCATION_ID`, `StandardInputText=n`, `Restart=always`,
+  `SuccessExitStatus=1` (podman exec exits 1 when the unit stops it, squeezelite exits cleanly).
+- The server must be given (`-s`): squeezelite's discovery broadcasts to UDP 3483 and the server
+  answers from its own address, which the host's nftables does not take for the reply of a
+  tracked connection (the broadcast went to 255.255.255.255) and drops. Found 2026-11-09: the
+  player never connected until `-s` was added.
+- `-m` is a locally administered address (`02:`) from a hash of the host name: another
+  squeezelite on the LAN already reports `00:00:00:00:00:00` (it could not read its MAC), and a
+  second player with the same one would be the same player to Lyrion. `uname -n`, not
+  `hostname`: the host images have no `hostname` command.
+- The `[aur]` build has ALSA output only (`squeezelite -?`: `LINUX ALSA ... FFMPEG ... LINKALL`):
+  `-o pipewire` is PipeWire's ALSA device (`squeezelite -l`), present in the box. ffmpeg is linked
+  in, not loaded at run time, so the package needs it (mpv in the box does too).
+
 ## Termux (phone)
 
 - `termux/` is not a stow package (`install` skips it, `NOT_PACKAGES`): Termux:Widget only runs

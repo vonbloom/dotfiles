@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Usage: squeezelite-player
+# squeezelite, a Lyrion player, in the userland box (run by squeezelite.service), playing through
+# PipeWire. The player is named after this machine, with a MAC address made from that name: Lyrion
+# tells players apart by it, and squeezelite's own guess is the first network interface's, which
+# changes between the dock's Ethernet and the Wi-Fi, or all zeros when it reads none (a value two
+# players would then share). The server's address comes from ~/.config/squeezelite.conf
+# (SERVER=<address>): without it squeezelite looks for a server on the LAN, and the host's
+# firewall drops the answer.
+
+set -euo pipefail
+
+conf=${XDG_CONFIG_HOME:-$HOME/.config}/squeezelite.conf
+server=
+[[ -r $conf ]] && server=$(sed -n 's/^SERVER=//p' "$conf" | tail -n 1)
+name=$(uname -n)
+# 02: a locally administered address
+mac=02:$(printf '%s' "$name" | sha256sum | cut -c1-10 | sed 's/../&:/g; s/:$//')
+
+args=(-n "$name" -m "$mac" -o pipewire)
+[[ -n $server ]] && args+=(-s "$server")
+exec /usr/bin/distrobox-enter --name userland -- squeezelite "${args[@]}"

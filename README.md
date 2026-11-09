@@ -34,6 +34,7 @@ cd ~/.dotfiles
 | `gnupg` | GnuPG and gpg-agent (also the SSH agent), `gpg-backup`, `gpg-restore`, `install-ssh-key`: [gnupg/README.md](gnupg/README.md) |
 | `icons` | the icon theme `Adwaita-Sidebar`: Adwaita plus colour Home and Recent icons in Thunar's side pane, set by its hook |
 | `scripts` | `userland`, `playground`, `note`, `arkdep-diff`, `vm-console` (below) |
+| `squeezelite` | a user unit that runs squeezelite, a Lyrion player, from the userland box (below) |
 | `ssh` | generic settings only; the hosts of one machine go in `~/.ssh/config.d/` (included, not in the repository) |
 | `syncthing` | a user unit that runs Syncthing from the userland box (below) |
 | `tmux` | vi keys, `C-a` as a second prefix, `h`/`j`/`k`/`l` between panes, the mouse, the status bar at the top |
@@ -81,6 +82,22 @@ other, and deletions are not carried over. Compare the copies first.
 
 Syncthing keeps userland running, so `userland-update` always asks before replacing the box; the
 unit starts Syncthing again in the new one.
+
+## Squeezelite
+
+`./install squeezelite`, on the host, enables a user unit that runs squeezelite, a player of a
+[Lyrion](https://lyrion.org) music server, from the userland box, playing through PipeWire. The
+player takes this machine's name, with a fixed MAC address made from it. The server's address
+goes in `~/.config/squeezelite.conf`, outside the repository:
+
+```sh
+SERVER=<address>
+```
+
+Without it squeezelite looks for a server on the LAN, but the host's firewall drops the answer.
+The hook enables the unit only once the userland box has squeezelite (an image built after
+2026-11-09). The waybar of the host images shows what the player plays (distro-builder, the
+music module).
 
 ## Termux (phone)
 

@@ -1,0 +1,25 @@
+# squeezelite, a Lyrion player, from the userland box (distro-builder userland/packages.list), run
+# by the host's systemd user manager through squeezelite-player: the player's name, MAC address and
+# server
+[Unit]
+Description=Squeezelite (userland box)
+Documentation=https://github.com/ralph-irving/squeezelite
+
+[Service]
+# A stopped box (after boot) is started first, without INVOCATION_ID: with it, podman would leave
+# the box's conmon in this unit and a restart of the player would stop the box. "-": a missing box
+# is left to ExecStart
+ExecStartPre=-/usr/bin/env -u INVOCATION_ID /usr/bin/distrobox-enter --name userland -- true
+ExecStart=%h/.local/bin/squeezelite-player
+# distrobox-enter offers to create a missing box ("Create it now? [Y/n]") and takes no answer as
+# yes: answer no (while userland-update replaces the box) and try again later
+StandardInput=data
+StandardInputText=n
+# userland-update stops the box to replace it: start again in the new one
+Restart=always
+RestartSec=5
+# Stopping the unit: conmon passes SIGTERM on to squeezelite, while podman exec itself exits 1
+SuccessExitStatus=1
+
+[Install]
+WantedBy=default.target
