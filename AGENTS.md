@@ -141,6 +141,10 @@ speaks Catalan; code, comments and commit messages are in English.
   it and `Restart=always` starts it in the new one; meanwhile `StandardInputText=n` answers
   distrobox-enter's "Create it now? [Y/n]", which an empty stdin takes as yes (a box from
   `archlinux:latest`).
+- `ExecStartPre` starts a stopped box without `INVOCATION_ID`: with that variable set, podman
+  leaves the conmon of a container it starts in the caller's systemd unit, so a box this unit
+  started (the first one after boot) stopped with every restart of Syncthing. Only the box: the
+  exec of `ExecStart` keeps the variable, its conmon in the unit is what passes the stop on.
 
 ## Termux (phone)
 

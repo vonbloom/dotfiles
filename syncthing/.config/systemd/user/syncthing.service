@@ -10,6 +10,10 @@ Documentation=https://docs.syncthing.net/
 Environment="STLOGFORMATTIMESTAMP="
 Environment="STLOGFORMATLEVELSTRING=false"
 Environment="STLOGFORMATLEVELSYSLOG=true"
+# A stopped box (after boot) is started first, without INVOCATION_ID: with it, podman would leave
+# the box's conmon in this unit and a restart of Syncthing would stop the box. "-": a missing box
+# is left to ExecStart
+ExecStartPre=-/usr/bin/env -u INVOCATION_ID /usr/bin/distrobox-enter --name userland -- true
 ExecStart=/usr/bin/distrobox-enter --name userland -- syncthing serve --no-browser --no-restart
 # distrobox-enter offers to create a missing box ("Create it now? [Y/n]") and takes no answer as
 # yes, out of a default image: answer no (while userland-update replaces the box, or before
